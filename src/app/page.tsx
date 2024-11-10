@@ -10,7 +10,7 @@ export default function Home() {
   const [interconnects, setInterconnects] = useState<InterConnectSegment[]>([]);
 
   useEffect(() => {
-    // Simulating data fetch with local JSON imports
+    // Simulating data fetch with local JSON imports and In the second milestone I will use google map api 
     try {
       setMarkers(markersData);
       setInterconnects(interconnectsData);
@@ -21,7 +21,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Google Maps Integration</h1>
+      <h1 className="text-2xl font-bold mb-4 text-center">Google Maps Integration</h1>
       <GoogleMap 
         markers={markers} 
         interconnects={interconnects}
