@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng } from '@/app/utils/MapUtils';
 import { SiteMarker, InterConnectSegment, Address } from '@/types';
@@ -8,12 +9,13 @@ interface Props {
   interconnectPathStyle: number;
 }
 
-// This is to deal with the google map component 
 export default function GoogleMap({ markers, interconnects, interconnectPathStyle }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [editMode, setEditMode] = useState(false); // Add Edit Mode state
   const [updatedMarkers, setUpdatedMarkers] = useState<SiteMarker[]>([]);
   const markersRef = useRef<Map<string, google.maps.Marker>>(new Map());
+  const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
   // Initialize the Google Map
@@ -24,10 +26,16 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
       const google = await loader.load();
       const newMap = new google.maps.Map(mapRef.current, {
         zoom: 4,
-        center: { lat: 0, lng: 0 },
         mapTypeControl: true,
         streetViewControl: true,
-        fullscreenControl: true
+        fullscreenControl: true,
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+          }
+        ]
       });
 
       setMap(newMap);
@@ -67,7 +75,6 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
 
       setUpdatedMarkers(processed);
 
-      // Calculate map bounds
       const bounds = new google.maps.LatLngBounds();
       const validMarkers = processed.filter(m => m.Update !== '-1');
 
@@ -76,19 +83,42 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
         if (position) bounds.extend(position);
       });
 
+      interconnects.forEach(segment => {
+        if (segment.WaypointLatLngArray) {
+          const waypoints = segment.WaypointLatLngArray
+            .replace(/[\[\]]/g, '')
+            .split(',')
+            .map(coord => {
+              const [lat, lng] = coord.trim().split(/\s+/).map(Number);
+              return { lat, lng };
+            })
+            .filter(coord => !isNaN(coord.lat) && !isNaN(coord.lng));
+          
+          waypoints.forEach(point => bounds.extend(point));
+        }
+      });
+
       if (validMarkers.length === 1) {
         const singlePosition = parseLatLng(validMarkers[0].LatLng);
-        map.setCenter(singlePosition!);
-        map.setZoom(10);
+        if (singlePosition) {
+          map.setCenter(singlePosition);
+          map.setZoom(12);
+        }
       } else {
         const ne = bounds.getNorthEast();
         const sw = bounds.getSouthWest();
-        const latDiff = (ne.lat() - sw.lat()) * 0.1;
-        const lngDiff = (ne.lng() - sw.lng()) * 0.1;
-        bounds.extend({ lat: ne.lat() + latDiff, lng: ne.lng() + lngDiff });
-        bounds.extend({ lat: sw.lat() - latDiff, lng: sw.lng() - lngDiff });
+        const latPadding = (ne.lat() - sw.lat()) * 0.05;
+        const lngPadding = (ne.lng() - sw.lng()) * 0.05;
+        
+        bounds.extend({ lat: ne.lat() + latPadding, lng: ne.lng() + lngPadding });
+        bounds.extend({ lat: sw.lat() - latPadding, lng: sw.lng() - lngPadding });
 
         map.fitBounds(bounds);
+        
+        const listener = google.maps.event.addListener(map, 'idle', () => {
+          if (map.getZoom()! > 15) map.setZoom(15);
+          google.maps.event.removeListener(listener);
+        });
       }
 
       validMarkers.forEach(marker => {
@@ -99,56 +129,53 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
           position,
           map,
           title: marker.Name,
+          draggable: editMode, // Enable dragging in edit mode
           icon: {
             url: marker.iconSVGfile,
             scaledSize: new google.maps.Size(32, 32),
           }
         });
 
-        if (marker.AlertStatus === '1') {
-          mapMarker.setIcon({
-            url: marker.iconSVGfile,
-            scaledSize: new google.maps.Size(32, 32),
-            anchor: new google.maps.Point(0, 0),
-            labelOrigin: new google.maps.Point(16, 16)
-          });
-        }
-
         markersRef.current.set(marker.Name, mapMarker);
-// this is to deal with mouseover events
+
         mapMarker.addListener('mouseover', () => {
           if (marker.tooltip) {
             infoWindowRef.current?.setContent(marker.tooltip.replace(/\\n/g, '<br>'));
             infoWindowRef.current?.open(map, mapMarker);
           }
         });
-        // this is to deal with mouseout events
+
         mapMarker.addListener('mouseout', () => {
           infoWindowRef.current?.close();
         });
 
-        // this is to deal with click event
         mapMarker.addListener('click', () => {
           if (marker.Details) {
             infoWindowRef.current?.setContent(marker.Details.replace(/\\n/g, '<br>'));
             infoWindowRef.current?.open(map, mapMarker);
           }
         });
-// this is to deal with double click event
+
         mapMarker.addListener('dblclick', () => {
           alert('DblClicked');
         });
+
+        if (editMode) {
+          mapMarker.addListener('dragend', () => {
+            const newPosition = mapMarker.getPosition();
+            // console.log('Marker moved:', { lat: newPosition.lat(), lng: newPosition.lng() });
+          });
+        }
       });
     };
 
     processMarkers();
-  }, [map, markers]);
+  }, [map, markers, interconnects, editMode]);
 
   // Draw InterConnect paths
   useEffect(() => {
     if (!map || updatedMarkers.length <= 1) return;
 
-    // this is to loop in the interconnects
     interconnects.forEach(segment => {
       if (!segment.Name || !segment.WaypointLatLngArray) return;
 
@@ -174,9 +201,12 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
         strokeColor: segment.LineColor,
         strokeOpacity: 1.0,
         strokeWeight: parseInt(segment.LineWidthpx),
+        editable: editMode, // Enable editing in edit mode
         map
       });
-// deal with mouseover
+
+      polylinesRef.current.push(polyline);
+
       polyline.addListener('mouseover', () => {
         if (segment.Desc) {
           infoWindowRef.current?.setContent(`${segment.Name}: ${segment.Desc}`);
@@ -185,19 +215,45 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
         }
       });
 
-      // deal with mouse out
       polyline.addListener('mouseout', () => {
         infoWindowRef.current?.close();
       });
 
-      // deal with click
       polyline.addListener('click', () => {
         alert('Segment clicked - API call placeholder');
       });
+
+      if (editMode) {
+        polyline.addListener('mouseup', () => {
+          const newPath = polyline.getPath().getArray().map(coord => ({
+            lat: coord.lat(),
+            lng: coord.lng()
+          }));
+          console.log('Path updated:', newPath);
+        });
+      }
     });
-  }, [map, updatedMarkers, interconnects, interconnectPathStyle]);
+  }, [map, updatedMarkers, interconnects, interconnectPathStyle, editMode]);
+
+  // Function to save map as image
+  const saveMapAsImage = () => {
+    const mapElement = mapRef.current;
+    if (mapElement) {
+      html2canvas(mapElement).then(canvas => {
+        const link = document.createElement('a');
+        link.download = 'map.png';
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  };
 
   return (
-    <div ref={mapRef} style={{ width: '100%', height: '800px' }} />
+    <div>
+      <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={() => setEditMode(!editMode)} >
+        {editMode ? 'Disable Edit Mode' : 'Enable Edit Mode'}
+      </button>
+      <div ref={mapRef} style={{ width: '100%', height: '800px' }} />
+    </div>
   );
 }

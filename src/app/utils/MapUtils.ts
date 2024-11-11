@@ -35,28 +35,3 @@ export const parseLatLng = (latLng: string): google.maps.LatLngLiteral | null =>
   const [lat, lng] = latLng.split(',').map(coord => parseFloat(coord.trim()));
   return isNaN(lat) || isNaN(lng) ? null : { lat, lng };
 };
-
-// export const parseLatLng = (latLng: string): google.maps.LatLngLiteral | null => {
-//   if (!latLng) return null;
-//   const [lat, lng] = latLng.split(/[,\s]+/).map(Number);
-//   return isNaN(lat) || isNaN(lng) ? null : { lat, lng };
-// };
-
-// export const getLatLngFromAddress = async (address: Address): Promise<google.maps.LatLngLiteral | null> => {
-//   const google = await loader.load();
-//   const geocoder = new google.maps.Geocoder();
-  
-//   const addressString = `${address.site}, ${address.city}, ${address.state}, ${address.country} ${address.postalcode}`;
-  
-//   try {
-//     const result = await geocoder.geocode({ address: addressString });
-//     if (result.results[0]?.geometry?.location) {
-//       const { lat, lng } = result.results[0].geometry.location;
-//       return { lat: lat(), lng: lng() };
-//     }
-//   } catch (error) {
-//     console.error('Geocoding error:', error);
-//   }
-  
-//   return null;
-// };
