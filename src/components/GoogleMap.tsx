@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng } from '@/app/utils/MapUtils';
 import { SiteMarker, InterConnectSegment, Address } from '@/types';
+import html2canvas from 'html2canvas';
 
 interface Props {
   markers: SiteMarker[];
@@ -80,7 +81,15 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
 
       validMarkers.forEach(marker => {
         const position = parseLatLng(marker.LatLng);
-        if (position) bounds.extend(position);
+        if (position){
+
+          const mapMarker = new google.maps.Marker({
+            position,
+            map, 
+          });
+           bounds.extend(position);
+           
+        }
       });
 
       interconnects.forEach(segment => {
@@ -223,6 +232,7 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
         alert('Segment clicked - API call placeholder');
       });
 
+      // this is to deal with edit mode
       if (editMode) {
         polyline.addListener('mouseup', () => {
           const newPath = polyline.getPath().getArray().map(coord => ({
@@ -235,16 +245,42 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
     });
   }, [map, updatedMarkers, interconnects, interconnectPathStyle, editMode]);
 
-  // Function to save map as image
-  const saveMapAsImage = () => {
-    const mapElement = mapRef.current;
-    if (mapElement) {
-      html2canvas(mapElement).then(canvas => {
+// this is the function to save impage 
+  const saveMapAsImage = async () => {
+    if (!mapRef.current) {
+      console.error('Map reference is not available');
+      return;
+    }
+  
+    try {
+      // Wait for all images/tiles to load
+      await new Promise(resolve => setTimeout(resolve, 1000));
+  
+      const canvas = await html2canvas(mapRef.current, {
+        useCORS: true,
+        allowTaint: true,
+        logging: true, // Enable logging for debugging
+      });
+  
+      // Create blob instead of data URL for better memory handling
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          throw new Error('Canvas to Blob conversion failed');
+        }
+        
+        const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.download = 'map.png';
-        link.href = canvas.toDataURL('image/png');
+        link.href = url;
+        document.body.appendChild(link);
         link.click();
-      });
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 'image/png');
+  
+    } catch (error) {
+      console.error('Error saving map as image:', error);
+      alert('Failed to save map as image: ' + error);
     }
   };
 
@@ -253,6 +289,12 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
       <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={() => setEditMode(!editMode)} >
         {editMode ? 'Disable Edit Mode' : 'Enable Edit Mode'}
       </button>
+        <button
+          onClick={saveMapAsImage}
+          className="px-4 py-2 bg-green-500 text-white rounded m-2"
+        >
+          Save Map as Image
+        </button>
       <div ref={mapRef} style={{ width: '100%', height: '800px' }} />
     </div>
   );
