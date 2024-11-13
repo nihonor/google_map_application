@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
+
 import { useState, useEffect } from 'react';
 import GoogleMap from '../components/GoogleMap';
 import markersData from '../data/SiteMarkers.json'; 
@@ -20,6 +21,7 @@ export default function Home() {
       console.error('Error loading data:', error);
     }
   }, []);
+  
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4 text-center">Google Maps Integration</h1>
