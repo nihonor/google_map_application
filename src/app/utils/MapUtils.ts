@@ -4,7 +4,7 @@ import { Address } from '@/types';
 export const loader = new Loader({
   apiKey: 'AIzaSyDoG2uuqTFfKF2HD1AWmCvEk70M-ojdsxw',
   version: 'weekly',
-  libraries: ['places', 'geometry']
+  libraries: ['places', 'geometry', "marker"]
 });
 
 // this is to get Lat from address 
