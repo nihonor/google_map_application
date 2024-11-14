@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng } from '@/app/utils/MapUtils';
 import { SiteMarker, InterConnectSegment, Address } from '@/types';
 import html2canvas from 'html2canvas';
-
 interface Props {
   markers: SiteMarker[];
   interconnects: InterConnectSegment[];
@@ -19,12 +18,19 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
   const polylinesRef = useRef<google.maps.Polyline[]>([]);
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
 
-  // Initialize the Google Map
+// this is to initialize google map
   useEffect(() => {
     const initMap = async () => {
       if (!mapRef.current) return;
-
+  
       const google = await loader.load();
+      
+      // Define the bounds (adjust the coordinates as needed)
+      const allowedBounds = new google.maps.LatLngBounds(
+        new google.maps.LatLng(-85, -180), // Southwest coordinates
+        new google.maps.LatLng(85, 180)    // Northeast coordinates
+      );
+  
       const newMap = new google.maps.Map(mapRef.current, {
         zoom: 4,
         mapTypeControl: true,
@@ -37,13 +43,17 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
             stylers: [{ visibility: "off" }]
           }
         ],
-        mapId: "4504f8b37365c3d0"
+        mapId: "4504f8b37365c3d0",
+        restriction: {
+          latLngBounds: allowedBounds,
+          strictBounds: true // Keeps the map within the defined bounds
+        }
       });
-
+  
       setMap(newMap);
       infoWindowRef.current = new google.maps.InfoWindow();
     };
-
+  
     initMap();
   }, []);
 
@@ -55,27 +65,44 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
       const processed = await Promise.all(markers.map(async (marker) => {
         const newMarker = { ...marker };
         let position = parseLatLng(marker.LatLng);
+        console.log("The positions are lat " + position?.lat + " and long" +position?.lng);
 
-        if (!position) {
-          try {
-            const address = JSON.parse(marker.Address.replace(/\"\"/g, '"')) as Address;
-            position = await getLatLngFromAddress(address);
-            if (position) {
+    if (!position) {
+      console.log("Position is not there");
+      try {
+          // Clean and fix the Address string
+          let cleanedAddress = marker.Address.replace(/\"\"/g, '"').trim();
+          
+          // Add double quotes around property names
+          cleanedAddress = cleanedAddress.replace(/(\w+):/g, '"$1":');
+          // Parse the cleaned string
+          const address = JSON.parse(cleanedAddress) as Address;
+          position = await getLatLngFromAddress(address);
+          console.log("Parsed Address: ", address);
+          console.log("The positions for the non-positioned records: ", position);
+  
+          if (position) {
               newMarker.LatLng = `${position.lat}, ${position.lng}`;
               newMarker.Update = '1';
-            } else {
+              
+              // Update markers array with the new marker
+              setUpdatedMarkers(prevMarkers => [...prevMarkers, newMarker]);
+          } else {
               newMarker.Update = '-1';
-            }
-          } catch (error) {
-            console.error('Error processing marker:', error);
-            newMarker.Update = '-1';
+              setUpdatedMarkers(prevMarkers => [...prevMarkers, newMarker]);
           }
-        }
+          
+      } catch (error) {
+          console.error('Error in processing marker:', error);
+          newMarker.Update = '-1';
+          setUpdatedMarkers(prevMarkers => [...prevMarkers, newMarker]);
+      }
+  }
+  
+  return newMarker;
+  }))
 
-        return newMarker;
-      }));
-
-      setUpdatedMarkers(processed);
+      setUpdatedMarkers([...processed]);
 
       const bounds = new google.maps.LatLngBounds();
       const validMarkers = processed.filter(m => m.Update !== '-1');
@@ -279,9 +306,6 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
           // console.log(currentMarkers)
           console.log(markersRef.current.keys().map(m => m))
           console.log(currentPath)
-
-          // mapMarker=newPath
-          // mapMarker.position=newPath;
 
           
           console.log('Path updated:', newPath);
