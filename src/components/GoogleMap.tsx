@@ -378,17 +378,16 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
 
   return (
     <div>
-      <button className="px-4 py-2 bg-blue-500 text-white rounded" onClick={() => setEditMode(!editMode)} >
+      <button className="px-4 py-2 bg-blue-500 text-white rounded bt-center" onClick={() => setEditMode(!editMode)} >
         {editMode ? 'Disable Edit Mode' : 'Enable Edit Mode'}
       </button>
-        <button
-          onClick={saveMapAsImage}
-          className="px-4 py-2 bg-green-500 text-white rounded m-2"
-        >
-          Save Map as Image
-        </button>
+    {/* Conditionally render the save button only in edit mode */}
+    {editMode && (
+      <button className="px-4 py-2 bg-green-500 text-white rounded" onClick={saveMapAsImage}>
+        Save Map as Image
+      </button>
+    )}
       <div ref={mapRef} style={{ width: '100%', height: '800px' }} />
     </div>
   );
 }
-
