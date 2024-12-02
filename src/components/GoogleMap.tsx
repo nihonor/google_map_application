@@ -3,11 +3,15 @@ import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng } from '@/app/utils/MapUtils';
 import { SiteMarker, InterConnectSegment, Address } from '@/types';
 import html2canvas from 'html2canvas';
+import { AnyRecord } from 'dns';
+
 interface Props {
   markers: SiteMarker[];
   interconnects: InterConnectSegment[];
   interconnectPathStyle: number;
 }
+
+
 
 export default function GoogleMap({ markers, interconnects, interconnectPathStyle }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
@@ -56,6 +60,8 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
   
     initMap();
   }, []);
+
+  
 
   // Process and update markers
   useEffect(() => {
@@ -186,26 +192,39 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
         });
 
         mapMarker.addListener('click', () => {
+          // console.log("it is clicked")
           if (marker.Details) {
             infoWindowRef.current?.setContent(marker.Details.replace(/\\n/g, '<br>'));
             infoWindowRef.current?.open(map, mapMarker);
           }
         });
+        mapMarker.addListener('dblclick', (e:AnyRecord) => {
+          console.log('Marker double-click event triggered');
+          console.log('Event details:', e);
+          alert('Double-click detected on marker');
+        });  
 
         mapMarker.addListener('dblclick', () => {
-          alert('DblClicked');
+          console.log("It is double clicked")
+          alert('Double-click detected');
         });
 
+      
+
         if (editMode) {
+
           mapMarker.addListener('dragend', () => {
             const newPosition = mapMarker.position;
             console.log('Marker moved:', { lat: newPosition?.lat, lng: newPosition?.lng });
-            // mapMarker.position = {lat: 37.39094933041195, lng: -122.02503913145092}
-            // mapMarker.position=newPosition;
           });
         }
       });
+
+      
+      
+      
     };
+    
 
     processMarkers();
   }, [map, markers, interconnects, editMode]);
@@ -267,6 +286,9 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
         }
 
       });
+    polyline.addListener('dblclick',()=>{
+      alert("double clicked")
+    })  
 
       // this is to deal with edit mode
       if (editMode) {
@@ -368,3 +390,4 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
     </div>
   );
 }
+

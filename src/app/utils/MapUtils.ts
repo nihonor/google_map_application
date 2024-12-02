@@ -35,3 +35,4 @@ export const parseLatLng = (latLng: string): google.maps.LatLngLiteral | null =>
   const [lat, lng] = latLng.split(',').map(coord => parseFloat(coord.trim()));
   return isNaN(lat) || isNaN(lng) ? null : { lat, lng };
 };
+
