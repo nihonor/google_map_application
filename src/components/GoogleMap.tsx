@@ -27,7 +27,8 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
     const initMap = async () => {
       if (!mapRef.current) return;
   
-      const google = await loader.load();
+        const google = await loader.load()
+            
       
       // Define the bounds (adjust the coordinates as needed)
       const allowedBounds = new google.maps.LatLngBounds(
@@ -350,7 +351,7 @@ export default function GoogleMap({ markers, interconnects, interconnectPathStyl
       const canvas = await html2canvas(mapRef.current, {
         useCORS: true,
         allowTaint: true,
-        logging: true, // Enable logging for debugging
+        logging: true, // This is to Enable logging for debugging
       });
   
       // Create blob instead of data URL for better memory handling
