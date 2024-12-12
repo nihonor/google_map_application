@@ -1,39 +1,86 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-"use client"
+// /* eslint-disable @typescript-eslint/no-unused-vars */
+// "use client"
 
-import { useState, useEffect } from 'react';
+// import { useState, useEffect } from 'react';
+// import GoogleMap from '../components/GoogleMap';
+// import markersData from '../data/SiteMarkers.json'; 
+// import interconnectsData from '../data/InterConnectSegments.json'; 
+// import { SiteMarker, InterConnectSegment } from '@/types';
+
+// export default function Home() {
+//   const [markers, setMarkers] = useState<SiteMarker[]>([]);
+//   const [interconnects, setInterconnects] = useState<InterConnectSegment[]>([]);
+//   const [editMode, setEditMode] = useState(false); // Manage edit mode here
+
+//   useEffect(() => {
+//     // Simulating data fetch with local JSON imports. In the second milestone, this will use Google Map API.
+//     try {
+//       setMarkers(markersData);
+//       setInterconnects(interconnectsData);
+//     } catch (error) {
+//       console.error('Error loading data:', error);
+//     }
+//   }, []);
+  
+//   return (
+//     <div className="container mx-auto p-4">
+//       <h1 className="text-2xl font-bold mb-4 text-center">Google Maps Integration</h1>
+//       <div id="map-container">
+//         <GoogleMap 
+//           markers={markers} 
+//           interconnects={interconnects}
+//           interconnectPathStyle={0}
+//         />
+//       </div>
+//     </div>
+//   );
+// }
+
+
+
+'use client';
+
+import { useState } from 'react';
 import GoogleMap from '../components/GoogleMap';
 import markersData from '../data/SiteMarkers.json'; 
 import interconnectsData from '../data/InterConnectSegments.json'; 
 import { SiteMarker, InterConnectSegment } from '@/types';
+// import { SiteMarker, InterConnectSegment } from '@/types';
 
-export default function Home() {
-  const [markers, setMarkers] = useState<SiteMarker[]>([]);
-  const [interconnects, setInterconnects] = useState<InterConnectSegment[]>([]);
-  const [editMode, setEditMode] = useState(false); // Manage edit mode here
+export default function MapPage() {
+  const [markers, setMarkers] = useState<SiteMarker[]>(markersData);
+  const [interconnects, setInterconnects] = useState<InterConnectSegment[]>(interconnectsData);
 
-  useEffect(() => {
-    // Simulating data fetch with local JSON imports. In the second milestone, this will use Google Map API.
-    try {
-      setMarkers(markersData);
-      setInterconnects(interconnectsData);
-    } catch (error) {
-      console.error('Error loading data:', error);
-    }
-  }, []);
-  
+  const handleClick = (name?: string, latlng?: { lat: number; lng: number }, address?: string) => {
+    alert(`Click Event - Name: ${name || 'Map'}, LatLng: ${latlng ? `${latlng.lat}, ${latlng.lng}` : 'N/A'}, Address: ${address || 'N/A'}`);
+  };
+
+  const handleDblClick = (name?: string) => {
+    alert(`Double Click Event - Name: ${name || 'Unknown'}`);
+  };
+
+  const handleCtrlClick = (name?: string) => {
+    alert(`Ctrl Click Event - Name: ${name || 'Unknown'}`);
+  };
+
+  const handleSave = (updatedMarkers: SiteMarker[], updatedInterconnects: InterConnectSegment[]) => {
+    // Update local state
+    setMarkers(updatedMarkers);
+    setInterconnects(updatedInterconnects);
+
+    // Here you would typically save to your backend or update JSON files
+    alert('Changes saved!');
+  };
+
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">Google Maps Integration</h1>
-      <div id="map-container">
-        <GoogleMap 
-          markers={markers} 
-          interconnects={interconnects}
-          interconnectPathStyle={0}
-        />
-      </div>
-    </div>
+    <GoogleMap 
+      markers={markers}
+      interconnects={interconnects}
+      editable={true}
+      fnClick={handleClick}
+      fnDblClick={handleDblClick}
+      fnCtrlClick={handleCtrlClick}
+      fnSave={handleSave}
+    />
   );
 }
-
-
