@@ -77,6 +77,53 @@ export default function GoogleMap({
   useEffect(() => {
     if (!map) return;
 
+        // This is the click event for the map
+        map.addListener("click", async (event) => {
+          const lat = event.latLng.lat();
+          const lng = event.latLng.lng();
+  
+          // Fetch address using reverse geocoding
+          const address = await reverseGeocode({lat, lng});
+  
+          // Tooltip content
+          const content = `
+              <div style="font-family: Arial, sans-serif;">
+                  <strong style="color: blue;">Latitude:</strong> <span style="font-weight: bold; color: green;">${lat}</span><br>
+                  <strong style="color: blue;">Longitude:</strong> <span style="font-weight: bold; color: green;">${lng}</span><br>
+                  <strong style="color: blue;">Address:</strong> <span style="font-weight: bold; color: purple;">${address}</span>
+              </div>
+          `;
+  
+          // Show InfoWindow at clicked position
+          infoWindowRef.current?.setContent(content);
+          infoWindowRef.current?.setPosition(event.latLng);
+          infoWindowRef.current?.open(map);
+      });
+
+      // this is to handle   mouse over 
+      map.addListener("mouseover", async (event) => {
+        const lat = event.latLng.lat();
+        const lng = event.latLng.lng();
+
+        // Fetch address using reverse geocoding
+        const address = await reverseGeocode({lat, lng});
+
+        // Tooltip content
+        const content = `
+            <div style="font-family: Arial, sans-serif;">
+                <strong style="color: blue;">Latitude:</strong> <span style="font-weight: bold; color: green;">${lat}</span><br>
+                <strong style="color: blue;">Longitude:</strong> <span style="font-weight: bold; color: green;">${lng}</span><br>
+                <strong style="color: blue;">Address:</strong> <span style="font-weight: bold; color: purple;">${address}</span>
+            </div>
+        `;
+
+        // Show InfoWindow at clicked position
+        infoWindowRef.current?.setContent(content);
+        infoWindowRef.current?.setPosition(event.latLng);
+        infoWindowRef.current?.open(map);
+    });
+  
+
     // Remove existing markers
     markersRef.current.forEach((marker) => {
       marker.map = null;
@@ -117,8 +164,34 @@ export default function GoogleMap({
 
         });
 
-        // Drag event for updating marker position
+
         if (editMode) {
+
+// Handle click on marker event in edit mode
+mapMarker.addListener('click', () => {
+
+  // Combine Address and LatLng with proper formatting
+  const content = `
+      <div style="font-family: Arial, sans-serif;">
+          <strong style="color: blue;">Address:</strong> <br>
+          <span style="font-weight: bold; color:red">
+          ${marker.Address.replace(/\\n/g, '<br>')}
+          </span>
+          <br><br>
+          <span style="font-weight: bold; color:red">
+          <strong style="color: blue;">Coordinates:</strong> <br>
+          ${marker.LatLng.replace(/\\n/g, '<br>')}
+           </span>
+      </div>
+  `;
+
+  // Set the combined content
+  infoWindowRef.current?.setContent(content);
+  infoWindowRef.current?.open(map, mapMarker);
+});
+
+
+        // this is to handle the dragend 
           mapMarker.addListener('dragend', (event: google.maps.MapMouseEvent) => {
             if (event.latLng) {
               const newLat = event.latLng.lat();
@@ -161,6 +234,11 @@ export default function GoogleMap({
       }
     }
   }, [map, markers, editMode]);
+
+  // map?.addListener(()=>{
+    
+  // });
+  
 
   // Draw InterConnect paths
   useEffect(() => {
