@@ -36,22 +36,38 @@ export const parseLatLng = (latLng: string): google.maps.LatLngLiteral | null =>
   return isNaN(lat) || isNaN(lng) ? null : { lat, lng };
 };
 
-export const reverseGeocode = async (location: { lat: number; lng: number }): Promise<string> => {
-  const google = await loader.load();
-  const geocoder = new google.maps.Geocoder();
+// export const reverseGeocode = async (location: { lat: number; lng: number }): Promise<string> => {
+//   const google = await loader.load();
+//   const geocoder = new google.maps.Geocoder();
   
-  try {
-    const response = await geocoder.geocode({ 
-      location: { lat: location.lat, lng: location.lng } 
-    });
+//   try {
+//     const response = await geocoder.geocode({ 
+//       location: { lat: location.lat, lng: location.lng } 
+//     });
     
-    if (response.results[0]) {
-      return response.results[0].formatted_address;
-    }
-    return 'Address not found';
-  } catch (error) {
-    console.error('Reverse geocoding error:', error);
-    return 'Unable to retrieve address';
-  }
-};
+//     if (response.results[0]) {
+//       return response.results[0].formatted_address;
+//     }
+//     return 'Address not found';
+//   } catch (error) {
+//     console.error('Reverse geocoding error:', error);
+//     return 'Unable to retrieve address';
+//   }
+// };
+
+
+export async function reverseGeocode({ lat, lng }: { lat: number; lng: number }): Promise<string> {
+  const geocoder = new google.maps.Geocoder();
+  return new Promise((resolve, reject) => {
+    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+      if (status === 'OK' && results && results[0]) {
+        resolve(results[0].formatted_address);
+      } else {
+        reject(`Geocode was not successful for the following reason: ${status}`);
+      }
+    });
+  });
+}
+
+
 

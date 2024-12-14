@@ -19,6 +19,7 @@ export interface SiteMarker {
   Details: string;
   iconColor?: string; 
   iconSize?: { width: number; height: number }; 
+  
 }
 
 export interface InterConnectSegment {
@@ -33,4 +34,16 @@ export interface InterConnectSegment {
   WaypointLatLngArray: string;
   LineHoverColor?: string; 
   LineClickEventMessage?: string; 
+  Update?: string;
+}
+
+export interface MapComponentProps {
+  markers: SiteMarker[];
+  interconnects: InterConnectSegment[];
+  interconnectPathStyle?: number;
+  editable?: boolean;
+  fnClick?: (name?: string, latlng?: { lat: number; lng: number }, address?: string) => void;
+  fnDblClick?: (name?: string) => void;
+  fnCtrlClick?: (name?: string) => void;
+  fnSave?: (markers: SiteMarker[], interconnects: InterConnectSegment[]) => void;
 }
