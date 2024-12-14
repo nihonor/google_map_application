@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     await fs.writeFile(markersFilePath, JSON.stringify(markers, null, 2), 'utf8');
 
     // Write interconnects file
-    await fs.appendFile(interconnectsFilePath, JSON.stringify(interconnects, null, 2), 'utf8');
+    await fs.writeFile(interconnectsFilePath, JSON.stringify(interconnects, null, 2), 'utf8');
 
     // Return success response
     return NextResponse.json({ message: 'Data saved successfully' }, { status: 200 });
