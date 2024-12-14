@@ -1,19 +1,18 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+// /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useState, useEffect } from 'react';
 import GoogleMap from '../components/GoogleMap';
 import markersData from '../data/SiteMarkers.json'; 
 import interconnectsData from '../data/InterConnectSegments.json'; 
-import { SiteMarker, InterConnectSegment } from '@/types';
+import { SiteMarker, InterConnectSegment, Address } from '@/types';
 
 export default function Home() {
   const [markers, setMarkers] = useState<SiteMarker[]>([]);
   const [interconnects, setInterconnects] = useState<InterConnectSegment[]>([]);
-  const [editMode, setEditMode] = useState(false); // Manage edit mode here
+  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
-    // Simulating data fetch with local JSON imports. In the second milestone, this will use Google Map API.
     try {
       setMarkers(markersData);
       setInterconnects(interconnectsData);
@@ -26,13 +25,80 @@ export default function Home() {
     alert(`Click Event: Name: ${name}, LatLng: ${latlng?.lat}, ${latlng?.lng}, Address: ${address}`);
   };
 
-  const handleSave = (updatedMarkers: SiteMarker[], updatedInterconnects: InterConnectSegment[]) => {
-    // Update local state
-    setMarkers(updatedMarkers);
-    setInterconnects(updatedInterconnects);
+  const handleSave = async (updatedMarkers: SiteMarker[], updatedInterconnects: InterConnectSegment[]) => {
+    try {
+      // Process markers
+      const processedMarkers = updatedMarkers.map(marker => {
+        const newMarker = { ...marker };
+        
+        // Ensure all fields are filled
+        if (newMarker.LatLng) {
+          const [lat, lng] = newMarker.LatLng.split(',').map(coord => coord.trim());
+          newMarker.Latitude = parseFloat(lat);
+          newMarker.Longitude = parseFloat(lng);
+          
+        }
+        
+        // If Address is a string, try to parse it
+        if (typeof newMarker.Address === 'string') {
+          try {
+            const parsedAddress: Address = JSON.parse(newMarker.Address.replace(/'/g, '"'));
+            newMarker.Address = parsedAddress.Address;
+          } catch (error) {
+            console.error('Error parsing address:', error);
+          }
+        }
+        
+        return newMarker;
+      });
 
-    // There we will save the updated content to the db 
-    alert('Changes saved!');
+      // Process interconnects
+      const processedInterconnects = updatedInterconnects.map(segment => {
+        const newSegment = { ...segment };
+        
+        // Ensure WaypointLatLngArray is properly formatted
+        if (newSegment.WaypointLatLngArray) {
+          // Remove brackets and split coordinates
+          const coordArray = newSegment.WaypointLatLngArray
+            .replace(/[\[\]]/g, '')
+            .split(',')
+            .map(coord => coord.trim());
+          
+          newSegment.WaypointLatLngArray = `[${coordArray.join(', ')}]`;
+        }
+
+        console.log('Original Interconnects:', interconnectsData);
+        console.log('Updated Interconnects:', updatedInterconnects);
+        
+        return newSegment;
+      });
+
+      // Send to API route for saving
+      const response = await fetch('/api/save-map-data', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          markers: processedMarkers,
+          interconnects: processedInterconnects
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save data');
+      }
+
+      // Update local state
+      setMarkers(processedMarkers);
+      setInterconnects(processedInterconnects);
+
+      alert('Changes saved successfully!');
+
+    } catch (error) {
+      console.error('Error saving changes:', error);
+      alert('Failed to save changes');
+    }
   };
 
   const handleDblClick = (name?: string) => {

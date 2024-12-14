@@ -1,6 +1,7 @@
 import { Loader } from '@googlemaps/js-api-loader';
 import { Address } from '@/types';
 
+
 export const loader = new Loader({
   apiKey: 'AIzaSyDoG2uuqTFfKF2HD1AWmCvEk70M-ojdsxw',
   version: 'weekly',
@@ -68,6 +69,4 @@ export async function reverseGeocode({ lat, lng }: { lat: number; lng: number })
     });
   });
 }
-
-
 
