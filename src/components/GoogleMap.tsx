@@ -109,10 +109,12 @@ export default function GoogleMap({
         });
 
         mapMarker.addListener('click', () => {
-          if (marker.Details) {
-            infoWindowRef.current?.setContent(marker.Details.replace(/\\n/g, '<br>'));
+    
+            infoWindowRef.current?.setContent(marker.Name.replace(/\\n/g, '<br>'))
+            infoWindowRef.current?.setContent(marker.LatLng.replace(/\\n/g, '<br>'))
+            infoWindowRef.current?.setContent(marker.Address.replace(/\\n/g, '<br>'))
             infoWindowRef.current?.open(map, mapMarker);
-          }
+
         });
 
         // Drag event for updating marker position
@@ -288,10 +290,18 @@ export default function GoogleMap({
     <div>
       <button 
         className="px-4 py-2 bg-blue-500 text-white rounded bt-center" 
-        onClick={() => setEditMode(!editMode)}
+        onClick={() => setEditMode(false)}
       >
-        {editMode ? 'Disable Edit Mode' : 'Enable Edit Mode'}
+        Normal Mode 
       </button>
+      <button 
+        className="px-4  py-2 bg-red-500 text-white rounded bt-center" 
+        onClick={() => setEditMode(true)}
+        style={{margin:4}}
+      >
+        Edit Mode 
+      </button>
+
 
       {editMode && (
         <button 
