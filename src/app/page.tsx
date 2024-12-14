@@ -26,81 +26,80 @@ export default function Home() {
     alert(`Click Event: Name: ${name}, LatLng: ${latlng?.lat}, ${latlng?.lng}, Address: ${address}`);
   };
 
+
   const handleSave = async (updatedMarkers: SiteMarker[], updatedInterconnects: InterConnectSegment[]) => {
     try {
-      // Process markers
-      const processedMarkers = updatedMarkers.map(marker => {
-        const newMarker = { ...marker };
-        
-        // Ensure all fields are filled
-        if (newMarker.LatLng) {
-          const [lat, lng] = newMarker.LatLng.split(',').map(coord => coord.trim());
-          newMarker.Latitude = parseFloat(lat);
-          newMarker.Longitude = parseFloat(lng);
-          
+      // Create deep copies of the updated markers and interconnects to avoid modifying state directly
+      const localMarkers = [...markers];
+      const localInterconnects = [...interconnects];
+  
+      // Update or add new markers
+      updatedMarkers.forEach((updatedMarker) => {
+        const existingMarkerIndex = localMarkers.findIndex((marker) => marker.Name === updatedMarker.Name);
+        if (existingMarkerIndex >= 0) {
+          // Update existing marker
+          localMarkers[existingMarkerIndex] = {
+            ...localMarkers[existingMarkerIndex],
+            ...updatedMarker,
+          };
+        } else {
+          // Add new marker
+          localMarkers.push(updatedMarker);
         }
-        
-        // If Address is a string, try to parse it
-        if (typeof newMarker.Address === 'string') {
-          try {
-            const parsedAddress: Address = JSON.parse(newMarker.Address.replace(/'/g, '"'));
-            newMarker.Address = parsedAddress.Address;
-          } catch (error) {
-            console.error('Error parsing address:', error);
-          }
-        }
-        
-        return newMarker;
       });
-
-      // Process interconnects
-      const processedInterconnects = updatedInterconnects.map(segment => {
-        const newSegment = { ...segment };
-        
-        // Ensure WaypointLatLngArray is properly formatted
-        if (newSegment.WaypointLatLngArray) {
-          // Remove brackets and split coordinates
-          const coordArray = newSegment.WaypointLatLngArray
-            .replace(/[\[\]]/g, '')
-            .split(',')
-            .map(coord => coord.trim());
-          
-          newSegment.WaypointLatLngArray = `[${coordArray.join(', ')}]`;
+  
+      // Update or add new interconnects
+      updatedInterconnects.forEach((updatedSegment) => {
+        const existingSegmentIndex = localInterconnects.findIndex((segment) => segment.Name === updatedSegment.Name);
+        if (existingSegmentIndex >= 0) {
+          // Update existing segment
+          localInterconnects[existingSegmentIndex] = {
+            ...localInterconnects[existingSegmentIndex],
+            ...updatedSegment,
+          };
+        } else {
+          // Add new interconnect
+          localInterconnects.push(updatedSegment);
         }
-
-        console.log('Original Interconnects:', interconnectsData);
-        console.log('Updated Interconnects:', updatedInterconnects);
-        
-        return newSegment;
       });
-
-      // Send to API route for saving
+  
+      // Prepare data for API saving
+      const dataToSave = {
+        markers: localMarkers.map((marker) => ({
+          ...marker,
+          Address: typeof marker.Address === 'string' ? marker.Address : JSON.stringify(marker.Address),
+        })),
+        interconnects: localInterconnects.map((segment) => ({
+          ...segment,
+          WaypointLatLngArray: JSON.stringify(segment.WaypointLatLngArray),
+        })),
+      };
+      console.log("Data to be saved : ",dataToSave)
+  
+      // Save to API route
       const response = await fetch('/api/save-map-data', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          markers: processedMarkers,
-          interconnects: processedInterconnects
-        })
+        body: JSON.stringify(dataToSave),
       });
-
+  
       if (!response.ok) {
         throw new Error('Failed to save data');
       }
-
-      // Update local state
-      setMarkers(processedMarkers);
-      setInterconnects(processedInterconnects);
-
+  
+      // Update state with the saved data
+      setMarkers(localMarkers);
+      setInterconnects(localInterconnects);
+  
       alert('Changes saved successfully!');
-
     } catch (error) {
       console.error('Error saving changes:', error);
       alert('Failed to save changes');
     }
   };
+  
 
   const handleDblClick = (name?: string) => {
     console.log("Double clicked")
@@ -120,7 +119,8 @@ export default function Home() {
           fnClick={handleClick}
           interconnects={interconnects}
           interconnectPathStyle={0}
-          fnSave={handleSave}
+          // fnSave={handleSave}
+          fnSave={(updatedMarkers, updatedInterconnects) => handleSave(updatedMarkers, updatedInterconnects)}
           fnDblClick={handleDblClick}
           fnCtrlClick={handleCtrlClick}
         />

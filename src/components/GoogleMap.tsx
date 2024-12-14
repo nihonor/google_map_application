@@ -318,7 +318,7 @@ mapMarker.addListener('click', () => {
     });
   }, [map, interconnects, editMode]);
 
-  // Save map as image
+  // this is the function to save impage 
   const saveMapAsImage = async () => {
     if (!mapRef.current) {
       console.error('Map reference is not available');
@@ -326,14 +326,16 @@ mapMarker.addListener('click', () => {
     }
   
     try {
+      // Wait for all images/tiles to load
       await new Promise(resolve => setTimeout(resolve, 1000));
   
       const canvas = await html2canvas(mapRef.current, {
         useCORS: true,
         allowTaint: true,
-        logging: true,
+        logging: true, // Enable logging for debugging
       });
   
+      // Create blob instead of data URL for better memory handling
       canvas.toBlob((blob) => {
         if (!blob) {
           throw new Error('Canvas to Blob conversion failed');

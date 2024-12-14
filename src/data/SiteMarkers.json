@@ -9,9 +9,7 @@
     "AlertStatus": "0",
     "tooltip": "This is Lisle, IL tooltip line1\\nThis is Tooltip line2",
     "Details": "This is IL Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line4",
-    "": "",
-    "Latitude": 41.837405,
-    "Longitude": -88.105166
+    "": ""
   },
   {
     "Name": "IOWA",
@@ -23,9 +21,7 @@
     "AlertStatus": "0",
     "tooltip": "This is Crawford County, IOWA tooltip line1\\nThis is Tooltip line2",
     "Details": "This is IowA Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line4",
-    "": "",
-    "Latitude": 41.908108,
-    "Longitude": -95.195467
+    "": ""
   },
   {
     "Name": "Poland",
@@ -37,23 +33,19 @@
     "AlertStatus": "0",
     "tooltip": "This is Holy Cross Church, Poland tooltip line1\\nThis is Tooltip line3",
     "Details": "This is Poland Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line5",
-    "": "",
-    "Latitude": 52.139887,
-    "Longitude": 19.794142
+    "": ""
   },
   {
     "Name": "Ebury, London",
     "Selected": "0",
-    "Update": "1",
-    "LatLng": "51.4955727, -0.1481035",
+    "Update": "0",
+    "LatLng": "",
     "Address": "{Address: \"\"54 Ebury Mews E\"\", City: \"\"London\"\", State: \"\"London\"\", ZIP: \"\"\"\", Country: \"\"United Kingdom\"\"}  ",
     "iconSVGfile": "myicon.svg",
     "AlertStatus": "2",
     "tooltip": "This isEbury Mews E, London tooltip line1\\nThis is Tooltip line5",
     "Details": "This is Ebury Mews E, London Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line7",
-    "": "",
-    "Latitude": 51.4955727,
-    "Longitude": -0.1481035
+    "": ""
   },
   {
     "Name": "Kyiv",
@@ -65,9 +57,7 @@
     "AlertStatus": "1",
     "tooltip": "This is Kyiv, Ukraine tooltip line1\\nThis is Tooltip line4",
     "Details": "This is Kyiv, Ukraine Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line6",
-    "": "",
-    "Latitude": 50.458433,
-    "Longitude": 30.476319
+    "": ""
   },
   {
     "Name": "Blanford, London",
@@ -79,9 +69,7 @@
     "AlertStatus": "1",
     "tooltip": "This is Blandford St, London tooltip line1\\nThis is Tooltip line4",
     "Details": "This is Blanford, London Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line6",
-    "": "",
-    "Latitude": 51.508431,
-    "Longitude": -0.204722
+    "": ""
   },
   {
     "Name": "LovesPArk, IL",
@@ -93,22 +81,18 @@
     "AlertStatus": "1",
     "tooltip": "This is Loves Park, IL tooltip line1\\nThis is Tooltip line4",
     "Details": "This is LovesPark IL Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line6",
-    "": "",
-    "Latitude": 51.508431,
-    "Longitude": -0.204722
+    "": ""
   },
   {
     "Name": "SpringField, IL",
     "Selected": "0",
-    "Update": "1",
-    "LatLng": "39.7588026, -89.6466025",
+    "Update": "0",
+    "LatLng": "",
     "Address": "{Address: \"\"3114 S 6th St\"\", City: \"\"Springfield\"\", State: \"\"IL\"\", ZIP: \"\"62703\"\", Country: \"\"United States\"\"}  ",
     "iconSVGfile": "myicon.svg",
     "AlertStatus": "1",
     "tooltip": "This is Springfield, IL tooltip line1\\nThis is Tooltip line4",
     "Details": "This is Springfield Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line6",
-    "": "",
-    "Latitude": 39.7588026,
-    "Longitude": -89.6466025
+    "": ""
   }
 ]
