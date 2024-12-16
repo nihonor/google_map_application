@@ -78,9 +78,12 @@ export default function GoogleMap({
     if (!map) return;
 
         // This is the click event for the map
-        map.addListener("click", async (event) => {
-          const lat = event.latLng.lat();
-          const lng = event.latLng.lng();
+        // map.addListener("click", async (event) => {
+        //   const lat = event.latLng.lat();
+        //   const lng = event.latLng.lng();
+        map.addListener("click", async (event: google.maps.MapMouseEvent) => {
+          const lat = event.latLng!.lat(); 
+          const lng = event.latLng!.lng();
   
           // Fetch address using reverse geocoding
           const address = await reverseGeocode({lat, lng});
@@ -101,9 +104,9 @@ export default function GoogleMap({
       });
 
       // this is to handle   mouse over 
-      map.addListener("mouseover", async (event) => {
-        const lat = event.latLng.lat();
-        const lng = event.latLng.lng();
+      map.addListener("mouseover", async (event: google.maps.MapMouseEvent)  => {
+        const lat = event.latLng!.lat();
+        const lng = event.latLng!.lng();
 
         // Fetch address using reverse geocoding
         const address = await reverseGeocode({lat, lng});
