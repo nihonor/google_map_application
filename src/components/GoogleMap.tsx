@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng, reverseGeocode } from '@/app/utils/MapUtils';
-import { SiteMarker, InterConnectSegment } from '@/types';
+import { SiteMarker, InterConnectSegment,Address } from '@/types';
 import html2canvas from 'html2canvas';
 
 interface Props {
@@ -132,8 +132,40 @@ export default function GoogleMap({
     markersRef.current.clear();
 
     // Create new markers
-    markers.forEach((marker) => {
-      const position = parseLatLng(marker.LatLng);
+    markers.forEach(async (marker) => {
+      let position = parseLatLng(marker.LatLng);
+
+      if (!position) {
+        console.log("Position is not there");
+        try {
+            // Clean and fix the Address string
+            let cleanedAddress = marker.Address.replace(/\"\"/g, '"').trim();
+            
+            // Add double quotes around property names
+            cleanedAddress = cleanedAddress.replace(/(\w+):/g, '"$1":');
+            // Parse the cleaned string
+            const address = JSON.parse(cleanedAddress) as Address;
+            position = await getLatLngFromAddress(address);
+            console.log("Parsed Address: ", address);
+            console.log("The positions for the non-positioned records: ", position);
+    
+            if (position) {
+                marker.LatLng = `${position.lat}, ${position.lng}`;
+                marker.Update = '1';
+                
+                // Update markers array with the new marker
+                setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
+            } else {
+                marker.Update = '-1';
+                setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
+            }
+            
+        } catch (error) {
+            console.error('Error in processing marker:', error);
+            marker.Update = '-1';
+            setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
+        }
+    }
       
       if (position) {
         const mapMarker = new google.maps.marker.AdvancedMarkerElement({
