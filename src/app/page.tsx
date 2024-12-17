@@ -1,16 +1,15 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useState, useEffect } from 'react';
 import GoogleMap from '../components/GoogleMap';
 import markersData from '../data/SiteMarkers.json'; 
 import interconnectsData from '../data/InterConnectSegments.json'; 
-import { SiteMarker, InterConnectSegment, Address } from '@/types';
+import { SiteMarker, InterConnectSegment } from '@/types';
 
 export default function Home() {
   const [markers, setMarkers] = useState<SiteMarker[]>([]);
   const [interconnects, setInterconnects] = useState<InterConnectSegment[]>([]);
-  const [editMode, setEditMode] = useState(false);
+  // const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     try {

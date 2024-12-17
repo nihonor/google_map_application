@@ -1,7 +1,6 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng, reverseGeocode } from '@/app/utils/MapUtils';
-import { SiteMarker, InterConnectSegment, Address } from '@/types';
+import { SiteMarker, InterConnectSegment } from '@/types';
 import html2canvas from 'html2canvas';
 
 interface Props {
@@ -28,6 +27,8 @@ export default function GoogleMap({
   const [editMode, setEditMode] = useState(false);
   const [updatedMarkers, setUpdatedMarkers] = useState<SiteMarker[]>(markers);
   const [updatedInterconnects, setUpdatedInterconnects] = useState<InterConnectSegment[]>(interconnects);
+  console.log(updatedInterconnects,updatedMarkers)
+  console.log(getLatLngFromAddress)
   
   // Refs to store map objects
   const markersRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement>>(new Map());
