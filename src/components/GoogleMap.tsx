@@ -78,9 +78,6 @@ export default function GoogleMap({
     if (!map) return;
 
         // This is the click event for the map
-        // map.addListener("click", async (event) => {
-        //   const lat = event.latLng.lat();
-        //   const lng = event.latLng.lng();
         map.addListener("click", async (event: google.maps.MapMouseEvent) => {
           const lat = event.latLng!.lat(); 
           const lng = event.latLng!.lng();
@@ -318,24 +315,40 @@ mapMarker.addListener('click', () => {
     });
   }, [map, interconnects, editMode]);
 
-  // this is the function to save impage 
+ // this is the function to save impage 
   const saveMapAsImage = async () => {
-    if (!mapRef.current) {
-      console.error('Map reference is not available');
+    if (!mapRef.current || !map) {
+      console.error('Map reference or map is not available');
       return;
     }
   
     try {
-      // Wait for all images/tiles to load
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Force redraw of markers using Google Maps API
+      const google = await loader.load();
   
+      // Temporarily add markers back to the map
+      markers.forEach((marker) => {
+        const position = parseLatLng(marker.LatLng);
+        if (position) {
+          new google.maps.Marker({
+            position,
+            map: map,
+            title: marker.Name,
+          });
+        }
+      });
+  
+      // Wait for rendering
+      await new Promise(resolve => setTimeout(resolve, 2000));
+  
+      // Capture the map with markers
       const canvas = await html2canvas(mapRef.current, {
         useCORS: true,
         allowTaint: true,
-        logging: true, // Enable logging for debugging
+        logging: true,
       });
   
-      // Create blob instead of data URL for better memory handling
+      // Create blob
       canvas.toBlob((blob) => {
         if (!blob) {
           throw new Error('Canvas to Blob conversion failed');
@@ -343,7 +356,7 @@ mapMarker.addListener('click', () => {
         
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
-        link.download = 'map.png';
+        link.download = 'map_with_markers.png';
         link.href = url;
         document.body.appendChild(link);
         link.click();
@@ -357,15 +370,107 @@ mapMarker.addListener('click', () => {
     }
   };
 
-  // Save function for edit mode
-  const handleSave = () => {
-    if (fnSave) {
-      fnSave(updatedMarkers, updatedInterconnects);
-    } else {
-      alert('Save function not provided');
-    }
+
+// this is to capture the current map and save it 
+  const captureAllMapElements = () => {
+    const allCurrentMarkers: SiteMarker[] = [];
+    const allCurrentInterconnects: InterConnectSegment[] = [];
+  
+    // Capture markers
+    markersRef.current.forEach((mapMarker, markerName) => {
+      try {
+        const position = mapMarker.position;
+  
+        if (position) {
+          const lat = typeof position.lat === 'function' ? position.lat() : position.lat;
+          const lng = typeof position.lng === 'function' ? position.lng() : position.lng;
+  
+          // Find the original marker to preserve other properties
+          const originalMarker = markers.find(m => m.Name === markerName);
+  
+          allCurrentMarkers.push({
+            ...originalMarker,
+            Name: markerName,
+            LatLng: `${lat}, ${lng}`,
+            Update: '1',
+            Selected: originalMarker?.Selected || 'DefaultSelected', 
+            Address: originalMarker?.Address || '', 
+            iconSVGfile: originalMarker?.iconSVGfile || '', 
+            AlertStatus: originalMarker?.AlertStatus || '',
+            tooltip: originalMarker?.tooltip || '',
+            Details: originalMarker?.Details || '',
+            iconColor: originalMarker?.iconColor, 
+            iconSize: originalMarker?.iconSize, 
+          });
+        }
+      } catch (error) {
+        console.error(`Error capturing marker ${markerName}:`, error);
+      }
+    });
+
+    // this is to capture all interconnects
+    polylinesRef.current.forEach((polyline, segmentName) => {
+      try {
+        const path = polyline.getPath();
+        if (path) {
+          const waypointPath = path
+            .getArray()
+            .slice(1)
+            .map(
+              coord =>
+                `${typeof coord.lat === 'function' ? coord.lat() : coord.lat} ${
+                  typeof coord.lng === 'function' ? coord.lng() : coord.lng
+                }`
+            )
+            .join(', ');
     
+          // Find the original interconnect to preserve other properties
+          const originalInterconnect = interconnects.find(ic => ic.Name === segmentName);
+    
+          allCurrentInterconnects.push({
+            ...originalInterconnect,
+            Name: segmentName,
+            WaypointLatLngArray: waypointPath,
+            Update: '1', // Default 'Update' value
+            Desc: originalInterconnect?.Desc || 'Default Description', 
+            LineType: originalInterconnect?.LineType || 'DefaultLineType', 
+            LineWidthpx: originalInterconnect?.LineWidthpx || '1px', 
+            LineColor: originalInterconnect?.LineColor || '#000000', 
+            LineAttribute: originalInterconnect?.LineAttribute || 'DefaultAttribute', 
+            LineStyle: originalInterconnect?.LineStyle || 'solid', 
+            LineEndIcon: originalInterconnect?.LineEndIcon || 'None', 
+            LineHoverColor: originalInterconnect?.LineHoverColor, 
+            LineClickEventMessage: originalInterconnect?.LineClickEventMessage,
+          });
+        }
+      } catch (error) {
+        console.error(`Error capturing interconnect ${segmentName}:`, error);
+      }
+    });
+    
+  
+    return {
+      markers: allCurrentMarkers,
+      interconnects: allCurrentInterconnects,
+    };
   };
+  
+
+// This is to save 
+const handleSave = () => {
+  if (fnSave) {
+    const { markers: capturedMarkers, interconnects: capturedInterconnects } = captureAllMapElements();
+    
+    console.log('Captured Markers:', capturedMarkers);
+    console.log('Captured Interconnects:', capturedInterconnects);
+
+    fnSave(capturedMarkers, capturedInterconnects);
+  } else {
+    console.error('Save function not provided');
+    alert('Save function not provided');
+  }
+};
+
 
   return (
     <div>

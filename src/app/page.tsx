@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-// /* eslint-disable @typescript-eslint/no-unused-vars */
 "use client"
 
 import { useState, useEffect } from 'react';
@@ -27,79 +26,43 @@ export default function Home() {
     alert(`Click Event: Name: ${name}, LatLng: ${latlng?.lat}, ${latlng?.lng}, Address: ${address}`);
   };
 
-// this is to handle the save of updated makrkers and interconnects 
-  const handleSave = async (updatedMarkers: SiteMarker[], updatedInterconnects: InterConnectSegment[]) => {
-    try {
-      // Create deep copies of the updated markers and interconnects to avoid modifying state directly
-      const localMarkers = [...markers];
-      const localInterconnects = [...interconnects];
-  
-      // Update or add new markers
-      updatedMarkers.forEach((updatedMarker) => {
-        const existingMarkerIndex = localMarkers.findIndex((marker) => marker.Name === updatedMarker.Name);
-        if (existingMarkerIndex >= 0) {
-          // Update existing marker
-          localMarkers[existingMarkerIndex] = {
-            ...localMarkers[existingMarkerIndex],
-            ...updatedMarker,
-          };
-        } else {
-          // Add new marker
-          localMarkers.push(updatedMarker);
-        }
-      });
-  
-      // Update or add new interconnects
-      updatedInterconnects.forEach((updatedSegment) => {
-        const existingSegmentIndex = localInterconnects.findIndex((segment) => segment.Name === updatedSegment.Name);
-        if (existingSegmentIndex >= 0) {
-          // Update existing segment
-          localInterconnects[existingSegmentIndex] = {
-            ...localInterconnects[existingSegmentIndex],
-            ...updatedSegment,
-          };
-        } else {
-          // Add new interconnect
-          localInterconnects.push(updatedSegment);
-        }
-      });
-  
-      // Prepare data for API saving
-      const dataToSave = {
-        markers: localMarkers.map((marker) => ({
-          ...marker,
-          Address: typeof marker.Address === 'string' ? marker.Address : JSON.stringify(marker.Address),
-        })),
-        interconnects: localInterconnects.map((segment) => ({
-          ...segment,
-          // Remove the JSON.stringify for WaypointLatLngArray
-          WaypointLatLngArray: segment.WaypointLatLngArray
-        })),
-      };
-  
-      // Save to API route
-      const response = await fetch('/api/save-map-data', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSave),
-      });
-  
-      if (!response.ok) {
-        throw new Error('Failed to save data');
-      }
-  
-      // Update state with the saved data
-      setMarkers(localMarkers);
-      setInterconnects(localInterconnects);
-  
-      alert('Changes saved successfully!');
-    } catch (error) {
-      console.error('Error saving changes:', error);
-      alert('Failed to save changes');
+
+const handleSave = async (updatedMarkers: SiteMarker[], updatedInterconnects: InterConnectSegment[]) => {
+  try {
+    // Prepare data for API saving
+    const dataToSave = {
+      markers: updatedMarkers.map((marker) => ({
+        ...marker,
+        Address: typeof marker.Address === 'string' ? marker.Address : JSON.stringify(marker.Address),
+      })),
+      interconnects: updatedInterconnects.map((segment) => ({
+        ...segment,
+        WaypointLatLngArray: segment.WaypointLatLngArray
+      })),
+    };
+
+    const response = await fetch('/api/save-map-data', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(dataToSave),
+    });
+
+    const responseData = await response.json();
+
+    if (!response.ok) {
+      throw new Error(responseData.message || 'Failed to save data');
     }
-  };
+
+    // Update local state with the new data
+    setMarkers(updatedMarkers);
+    setInterconnects(updatedInterconnects);
+  } catch (error) {
+    console.error('Error saving changes:', error);
+    alert(`Failed to save changes: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
   
 
   const handleDblClick = (name?: string) => {

@@ -19,8 +19,6 @@ export interface SiteMarker {
   Details: string;
   iconColor?: string; 
   iconSize?: { width: number; height: number }; 
-  // Latitude:number;
-  // Longitude:number;
   
 }
 

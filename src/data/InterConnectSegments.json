@@ -8,40 +8,8 @@
     "LineAttribute": "0",
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "[41.891195 -88.662743, 41.64537252288499  -90.15688397757881, 41.53033315502464  -95.54018467928445, 41.25009883975303  -95.89174717408973, ]"
-  },
-  {
-    "Name": "Blanford, London",
-    "Desc": "Blanford, London Site",
-    "LineType": "Dash",
-    "LineWidthpx": "3",
-    "LineColor": "Blue",
-    "LineAttribute": "0",
-    "LineStyle": "1",
-    "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": ""
-  },
-  {
-    "Name": "Loves Park, IL",
-    "Desc": "Loves Park, IL Site",
-    "LineType": "Dash",
-    "LineWidthpx": "3",
-    "LineColor": "Blue",
-    "LineAttribute": "0",
-    "LineStyle": "1",
-    "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "[41.908108  -95.195467, ]"
-  },
-  {
-    "Name": "SpringField, IL",
-    "Desc": "SpringField, IL Site",
-    "LineType": "Dash",
-    "LineWidthpx": "3",
-    "LineColor": "Blue",
-    "LineAttribute": "0",
-    "LineStyle": "0",
-    "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "[41.837405  -88.105166, ]"
+    "WaypointLatLngArray": "41.891195 -88.662743, 41.64537252288499 -90.15688397757881, 41.53033315502464 -95.54018467928445, 41.25009883975303 -95.89174717408973",
+    "Update": "1"
   },
   {
     "Name": "IOWA",
@@ -52,7 +20,8 @@
     "LineAttribute": "0",
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "[41.837405  -88.105166, ]"
+    "WaypointLatLngArray": "41.837405 -88.105166",
+    "Update": "1"
   },
   {
     "Name": "Poland",
@@ -63,18 +32,8 @@
     "LineAttribute": "2",
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "[50.458433 30.476319, ]"
-  },
-  {
-    "Name": "Ebury, London",
-    "Desc": "Ebury, London Site",
-    "LineType": "Dash",
-    "LineWidthpx": "2",
-    "LineColor": "Red",
-    "LineAttribute": "0",
-    "LineStyle": "0",
-    "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "[51.508431 -0.204722, ]"
+    "WaypointLatLngArray": "50.458433 30.476319",
+    "Update": "1"
   },
   {
     "Name": "Kyiv",
@@ -85,61 +44,7 @@
     "LineAttribute": "2",
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "[52.139887  19.794142, ]"
-  },
-  {
-    "Name": "",
-    "Desc": "",
-    "LineType": "",
-    "LineWidthpx": "",
-    "LineColor": "",
-    "LineAttribute": "",
-    "LineStyle": "",
-    "LineEndIcon": "",
-    "WaypointLatLngArray": ""
-  },
-  {
-    "Name": "",
-    "Desc": "",
-    "LineType": "",
-    "LineWidthpx": "",
-    "LineColor": "",
-    "LineAttribute": "",
-    "LineStyle": "",
-    "LineEndIcon": "",
-    "WaypointLatLngArray": ""
-  },
-  {
-    "Name": "",
-    "Desc": "",
-    "LineType": "",
-    "LineWidthpx": "",
-    "LineColor": "",
-    "LineAttribute": "",
-    "LineStyle": "",
-    "LineEndIcon": "",
-    "WaypointLatLngArray": ""
-  },
-  {
-    "Name": "",
-    "Desc": "",
-    "LineType": "",
-    "LineWidthpx": "",
-    "LineColor": "",
-    "LineAttribute": "",
-    "LineStyle": "",
-    "LineEndIcon": "",
-    "WaypointLatLngArray": ""
-  },
-  {
-    "Name": "",
-    "Desc": "",
-    "LineType": "",
-    "LineWidthpx": "",
-    "LineColor": "",
-    "LineAttribute": "",
-    "LineStyle": "",
-    "LineEndIcon": "`",
-    "WaypointLatLngArray": ""
+    "WaypointLatLngArray": "52.139887 19.794142",
+    "Update": "1"
   }
 ]
