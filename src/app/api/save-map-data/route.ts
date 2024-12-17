@@ -11,9 +11,10 @@ export async function POST(request: NextRequest) {
     // Paths to JSON files
     const markersFilePath = path.join(process.cwd(),'src' ,'data', 'SiteMarkers.json');
     const interconnectsFilePath = path.join(process.cwd(),'src', 'data', 'InterConnectSegments.json');
-    
+    console.log("The updated to be saved : ",markers)
     await fs.writeFile(markersFilePath, JSON.stringify(markers, null, 2), 'utf8');
 
+    console.log("The updated interconnects to be saved  : ",interconnects)
     // Write interconnects file
     await fs.writeFile(interconnectsFilePath, JSON.stringify(interconnects, null, 2), 'utf8');
 

@@ -8,7 +8,7 @@
     "LineAttribute": "0",
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"[41.891195 -88.662743, 41.64537252288499  -90.15688397757881, 41.53033315502464  -95.54018467928445, 41.25009883975303  -95.89174717408973, ]\""
+    "WaypointLatLngArray": "[41.891195 -88.662743, 41.64537252288499  -90.15688397757881, 41.53033315502464  -95.54018467928445, 41.25009883975303  -95.89174717408973, ]"
   },
   {
     "Name": "Blanford, London",
@@ -19,7 +19,7 @@
     "LineAttribute": "0",
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"\""
+    "WaypointLatLngArray": ""
   },
   {
     "Name": "Loves Park, IL",
@@ -30,7 +30,7 @@
     "LineAttribute": "0",
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"[41.908108  -95.195467, ]\""
+    "WaypointLatLngArray": "[41.908108  -95.195467, ]"
   },
   {
     "Name": "SpringField, IL",
@@ -41,7 +41,7 @@
     "LineAttribute": "0",
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"[41.837405  -88.105166, ]\""
+    "WaypointLatLngArray": "[41.837405  -88.105166, ]"
   },
   {
     "Name": "IOWA",
@@ -52,7 +52,7 @@
     "LineAttribute": "0",
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"[41.837405  -88.105166, ]\""
+    "WaypointLatLngArray": "[41.837405  -88.105166, ]"
   },
   {
     "Name": "Poland",
@@ -63,7 +63,7 @@
     "LineAttribute": "2",
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"[50.458433 30.476319, ]\""
+    "WaypointLatLngArray": "[50.458433 30.476319, ]"
   },
   {
     "Name": "Ebury, London",
@@ -74,7 +74,7 @@
     "LineAttribute": "0",
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"[51.508431 -0.204722, ]\""
+    "WaypointLatLngArray": "[51.508431 -0.204722, ]"
   },
   {
     "Name": "Kyiv",
@@ -85,7 +85,7 @@
     "LineAttribute": "2",
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "\"[52.139887  19.794142, ]\""
+    "WaypointLatLngArray": "[52.139887  19.794142, ]"
   },
   {
     "Name": "",
@@ -96,7 +96,7 @@
     "LineAttribute": "",
     "LineStyle": "",
     "LineEndIcon": "",
-    "WaypointLatLngArray": "\"\""
+    "WaypointLatLngArray": ""
   },
   {
     "Name": "",
@@ -107,7 +107,7 @@
     "LineAttribute": "",
     "LineStyle": "",
     "LineEndIcon": "",
-    "WaypointLatLngArray": "\"\""
+    "WaypointLatLngArray": ""
   },
   {
     "Name": "",
@@ -118,7 +118,7 @@
     "LineAttribute": "",
     "LineStyle": "",
     "LineEndIcon": "",
-    "WaypointLatLngArray": "\"\""
+    "WaypointLatLngArray": ""
   },
   {
     "Name": "",
@@ -129,7 +129,7 @@
     "LineAttribute": "",
     "LineStyle": "",
     "LineEndIcon": "",
-    "WaypointLatLngArray": "\"\""
+    "WaypointLatLngArray": ""
   },
   {
     "Name": "",
@@ -140,6 +140,6 @@
     "LineAttribute": "",
     "LineStyle": "",
     "LineEndIcon": "`",
-    "WaypointLatLngArray": "\"\""
+    "WaypointLatLngArray": ""
   }
 ]

@@ -238,9 +238,6 @@ mapMarker.addListener('click', () => {
     }
   }, [map, markers, editMode]);
 
-  // map?.addListener(()=>{
-    
-  // });
   
 
   // Draw InterConnect paths
@@ -367,6 +364,7 @@ mapMarker.addListener('click', () => {
     } else {
       alert('Save function not provided');
     }
+    
   };
 
   return (

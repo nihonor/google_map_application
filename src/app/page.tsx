@@ -17,6 +17,7 @@ export default function Home() {
     try {
       setMarkers(markersData);
       setInterconnects(interconnectsData);
+      
     } catch (error) {
       console.error('Error loading data:', error);
     }
@@ -26,7 +27,7 @@ export default function Home() {
     alert(`Click Event: Name: ${name}, LatLng: ${latlng?.lat}, ${latlng?.lng}, Address: ${address}`);
   };
 
-
+// this is to handle the save of updated makrkers and interconnects 
   const handleSave = async (updatedMarkers: SiteMarker[], updatedInterconnects: InterConnectSegment[]) => {
     try {
       // Create deep copies of the updated markers and interconnects to avoid modifying state directly
@@ -71,10 +72,10 @@ export default function Home() {
         })),
         interconnects: localInterconnects.map((segment) => ({
           ...segment,
-          WaypointLatLngArray: JSON.stringify(segment.WaypointLatLngArray),
+          // Remove the JSON.stringify for WaypointLatLngArray
+          WaypointLatLngArray: segment.WaypointLatLngArray
         })),
       };
-      console.log("Data to be saved : ",dataToSave)
   
       // Save to API route
       const response = await fetch('/api/save-map-data', {
