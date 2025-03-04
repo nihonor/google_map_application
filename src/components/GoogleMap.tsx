@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng, reverseGeocode } from '@/app/utils/MapUtils';
 import { SiteMarker, InterConnectSegment,Address } from '@/types';
 import html2canvas from 'html2canvas';
+import Popup_JsonObject from './Popup_JsonObject'
 
 interface Props {
   markers: SiteMarker[];
@@ -29,6 +30,7 @@ export default function GoogleMap({
   const [updatedInterconnects, setUpdatedInterconnects] = useState<InterConnectSegment[]>(interconnects);
   console.log(updatedInterconnects,updatedMarkers)
   console.log(getLatLngFromAddress)
+  const [showPopup, setShowPopup] = useState(false);
   
   // Refs to store map objects
   const markersRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement>>(new Map());
@@ -156,6 +158,7 @@ export default function GoogleMap({
                 // Update markers array with the new marker
                 setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
             } else {
+              
                 marker.Update = '-1';
                 setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
             }
@@ -504,9 +507,20 @@ const handleSave = () => {
   }
 };
 
+const handlePreview = () => {
+  setShowPopup(true);
+};
 
   return (
     <div>
+
+      {/* Popup for JSON Preview */}
+      {showPopup && (
+        <Popup_JsonObject
+          data={markers} 
+          onClose={() => setShowPopup(false)}
+        />
+      )}
       <button 
         className="px-4 py-2 bg-blue-500 text-white rounded bt-center" 
         onClick={() => setEditMode(false)}
@@ -521,7 +535,15 @@ const handleSave = () => {
         Edit Mode 
       </button>
 
-
+          {/* Preview Button and it will be appear in the edit mode only */}
+          {editMode && (
+          <button
+        className="px-4 py-2 bg-blue-500 text-white rounded"
+        onClick={handlePreview}
+      >
+        Preview
+      </button>
+)}
       {editMode && (
         <button 
           className="px-4 py-2 bg-green-500 text-white rounded ml-2" 
