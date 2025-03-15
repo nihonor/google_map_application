@@ -222,23 +222,40 @@ export default function GoogleMap({
         });
 
         // Add event listeners
-        mapMarker.addListener('mouseover', () => {
-          if (marker.tooltip) {
-            infoWindowRef.current?.setContent(marker.tooltip.replace(/\\n/g, '<br>'));
-            infoWindowRef.current?.open(map, mapMarker);
-          }
-        });
+        // mapMarker.addListener('mouseover', () => {
+        //   // if (marker.tooltip) {
+        //     infoWindowRef.current?.setContent(marker.Name)
+        //     infoWindowRef.current?.setContent(marker.tooltip.replace(/\\n/g, '<br>'));
+        //     infoWindowRef.current?.open(map, mapMarker);
+        //   // }
+        // });
 
         mapMarker.addListener('mouseout', () => {
           infoWindowRef.current?.close();
         });
 
-        mapMarker.addListener('click', () => {
-          infoWindowRef.current?.setContent(marker.Name.replace(/\\n/g, '<br>'))
-          infoWindowRef.current?.setContent(marker.LatLng.replace(/\\n/g, '<br>'))
-          infoWindowRef.current?.setContent(marker.Address.replace(/\\n/g, '<br>'))
-          infoWindowRef.current?.open(map, mapMarker);
-        });
+mapMarker.addListener('mouseover', () => {
+  // Format content with Name on first line and Tooltip on second line
+  const content = `
+    <div style="font-family: Arial, sans-serif;">
+      <strong>${marker.Name}</strong><br>
+      ${marker.tooltip ? marker.tooltip.replace(/\\n/g, '<br>') : ''}
+    </div>
+  `;
+  infoWindowRef.current?.setContent(content);
+  infoWindowRef.current?.open(map, mapMarker);
+});
+
+mapMarker.addListener('click', () => {
+  const content = `
+    <div style="font-family: Arial, sans-serif;">
+      <strong>${marker.Name}</strong><br>
+      ${marker.Details ? marker.Details.replace(/\\n/g, '<br>') : ''}
+    </div>
+  `;
+  infoWindowRef.current?.setContent(content);
+  infoWindowRef.current?.open(map, mapMarker);
+});
 
         if (editMode) {
           // Handle click on marker event in edit mode
@@ -254,7 +271,7 @@ export default function GoogleMap({
                     <span style="font-weight: bold; color:red">
                     <strong style="color: blue;">Coordinates:</strong> <br>
                     ${marker.LatLng.replace(/\\n/g, '<br>')}
-                     </span>
+                    </span>
                 </div>
             `;
 
