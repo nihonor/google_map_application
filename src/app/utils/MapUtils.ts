@@ -3,7 +3,8 @@ import { Address } from '@/types';
 
 
 export const loader = new Loader({
-  apiKey: 'AIzaSyDoG2uuqTFfKF2HD1AWmCvEk70M-ojdsxw',
+  // apiKey: 'AIzaSyDoG2uuqTFfKF2HD1AWmCvEk70M-ojdsxw',
+  apiKey:'AIzaSyApxJVBz6gc3MGVqK_GFWQuhnejC9Z0J5Y',
   version: 'weekly',
   libraries: ['places', 'geometry', "marker"]
 });

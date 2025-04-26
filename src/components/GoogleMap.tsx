@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { loader, getLatLngFromAddress, parseLatLng, reverseGeocode } from '@/app/utils/MapUtils';
 import { SiteMarker, InterConnectSegment, Address } from '@/types';
 import html2canvas from 'html2canvas';
-import Popup_JsonObject from './Popup_JsonObject'
+import DataPreview from './DataPreview';
 
 interface Props {
   markers: SiteMarker[];
@@ -220,15 +220,6 @@ export default function GoogleMap({
           gmpDraggable: editMode,
           gmpClickable: true,
         });
-
-        // Add event listeners
-        // mapMarker.addListener('mouseover', () => {
-        //   // if (marker.tooltip) {
-        //     infoWindowRef.current?.setContent(marker.Name)
-        //     infoWindowRef.current?.setContent(marker.tooltip.replace(/\\n/g, '<br>'));
-        //     infoWindowRef.current?.open(map, mapMarker);
-        //   // }
-        // });
 
         mapMarker.addListener('mouseout', () => {
           infoWindowRef.current?.close();
@@ -567,7 +558,7 @@ mapMarker.addListener('click', () => {
     <div>
       {/* Popup for JSON Preview */}
       {showPopup && (
-        <Popup_JsonObject
+        <DataPreview
           data={markers} 
           onClose={() => setShowPopup(false)}
         />
