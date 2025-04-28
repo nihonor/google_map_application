@@ -9,11 +9,12 @@ interface PopupDataViewProps {
 const DataPreview: React.FC<PopupDataViewProps> = ({ data, onClose }) => {
   return (
     <div style={{
-      position: 'fixed',
-      top: '10%',
-      left: '10%',
-      width: '40%',
-      height: '40%',
+      position: 'absolute',
+      top: '50%',
+      left: '50%',
+      transform: 'translate(-50%, -50%)',
+      width: '70%',
+      maxHeight: '80%',
       backgroundColor: 'white',
       padding: '20px',
       border: '1px solid #ccc',
