@@ -27,16 +27,17 @@ export default function GoogleMap({
   const mapRef = useRef<HTMLDivElement>(null);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [editMode, setEditMode] = useState(false);
-  const [updatedMarkers, setUpdatedMarkers] = useState<SiteMarker[]>(markers);
-  const [updatedInterconnects, setUpdatedInterconnects] = useState<InterConnectSegment[]>(interconnects);
-  console.log(updatedInterconnects,updatedMarkers)
-  console.log(getLatLngFromAddress)
+  const [updatedMarkers, setUpdatedMarkers] = useState<SiteMarker[]>([...markers]);
+  const [updatedInterconnects, setUpdatedInterconnects] = useState<InterConnectSegment[]>([...interconnects]);
   const [showPopup, setShowPopup] = useState(false);
   
   // Refs to store map objects
   const markersRef = useRef<Map<string, google.maps.marker.AdvancedMarkerElement>>(new Map());
   const polylinesRef = useRef<Map<string, google.maps.Polyline>>(new Map());
   const infoWindowRef = useRef<google.maps.InfoWindow | null>(null);
+
+  // Keep track of processed markers for state updates
+  const processedMarkersRef = useRef<SiteMarker[]>([]);
 
   // Initialize Google Map
   useEffect(() => {
@@ -76,6 +77,12 @@ export default function GoogleMap({
   
     initMap();
   }, []);
+
+  // Update local state when props change
+  useEffect(() => {
+    setUpdatedMarkers([...markers]);
+    setUpdatedInterconnects([...interconnects]);
+  }, [markers, interconnects]);
 
   // Function to find interconnects connected to a marker
   const findConnectedInterconnects = (markerName: string) => {
@@ -123,8 +130,11 @@ export default function GoogleMap({
   useEffect(() => {
     if (!map) return;
 
+    // Reset processed markers collection
+    processedMarkersRef.current = [];
+
     // This is the click event for the map
-    map.addListener("click", async (event: google.maps.MapMouseEvent) => {
+    const clickListener = map.addListener("click", async (event: google.maps.MapMouseEvent) => {
       const lat = event.latLng!.lat(); 
       const lng = event.latLng!.lng();
 
@@ -147,7 +157,7 @@ export default function GoogleMap({
     });
 
     // this is to handle mouse over 
-    map.addListener("mouseover", async (event: google.maps.MapMouseEvent) => {
+    const mouseoverListener = map.addListener("mouseover", async (event: google.maps.MapMouseEvent) => {
       const lat = event.latLng!.lat();
       const lng = event.latLng!.lng();
 
@@ -176,12 +186,16 @@ export default function GoogleMap({
     markersRef.current.clear();
 
     // Create new markers
-    markers.forEach(async (marker) => {
-      let position = parseLatLng(marker.LatLng);
+    const processMarkers = async () => {
+      const tempMarkers: SiteMarker[] = [];
+      
+      for (const marker of markers) {
+        let position = parseLatLng(marker.LatLng);
+        const updatedMarker = {...marker};
 
-      if (!position) {
-        console.log("Position is not there");
-        try {
+        if (!position) {
+          console.log("Position is not there");
+          try {
             // Clean and fix the Address string
             let cleanedAddress = marker.Address.replace(/\"\"/g, '"').trim();
             
@@ -194,111 +208,115 @@ export default function GoogleMap({
             console.log("The positions for the non-positioned records: ", position);
     
             if (position) {
-                marker.LatLng = `${position.lat}, ${position.lng}`;
-                marker.Update = '1';
-                
-                // Update markers array with the new marker
-                setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
+              updatedMarker.LatLng = `${position.lat}, ${position.lng}`;
+              updatedMarker.Update = '1';
             } else {
-              
-                marker.Update = '-1';
-                setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
+              updatedMarker.Update = '-1';
             }
             
-        } catch (error) {
+          } catch (error) {
             console.error('Error in processing marker:', error);
-            marker.Update = '-1';
-            setUpdatedMarkers(prevMarkers => [...prevMarkers, marker]);
+            updatedMarker.Update = '-1';
+          }
         }
-      }
-      
-      if (position) {
-        const mapMarker = new google.maps.marker.AdvancedMarkerElement({
-          position,
-          map, 
-          title: marker.Name,
-          gmpDraggable: editMode,
-          gmpClickable: true,
-        });
+        
+        if (position) {
+          const mapMarker = new google.maps.marker.AdvancedMarkerElement({
+            position,
+            map, 
+            title: marker.Name,
+            gmpDraggable: editMode,
+            gmpClickable: true,
+          });
 
-        mapMarker.addListener('mouseout', () => {
-          infoWindowRef.current?.close();
-        });
+          mapMarker.addListener('mouseout', () => {
+            infoWindowRef.current?.close();
+          });
 
-mapMarker.addListener('mouseover', () => {
-  // Format content with Name on first line and Tooltip on second line
-  const content = `
-    <div style="font-family: Arial, sans-serif;">
-      <strong>${marker.Name}</strong><br>
-      ${marker.tooltip ? marker.tooltip.replace(/\\n/g, '<br>') : ''}
-    </div>
-  `;
-  infoWindowRef.current?.setContent(content);
-  infoWindowRef.current?.open(map, mapMarker);
-});
-
-mapMarker.addListener('click', () => {
-  const content = `
-    <div style="font-family: Arial, sans-serif;">
-      <strong>${marker.Name}</strong><br>
-      ${marker.Details ? marker.Details.replace(/\\n/g, '<br>') : ''}
-    </div>
-  `;
-  infoWindowRef.current?.setContent(content);
-  infoWindowRef.current?.open(map, mapMarker);
-});
-
-        if (editMode) {
-          // Handle click on marker event in edit mode
-          mapMarker.addListener('click', () => {
-            // Combine Address and LatLng with proper formatting
+          mapMarker.addListener('mouseover', () => {
+            // Format content with Name on first line and Tooltip on second line
             const content = `
-                <div style="font-family: Arial, sans-serif;">
-                    <strong style="color: blue;">Address:</strong> <br>
-                    <span style="font-weight: bold; color:red">
-                    ${marker.Address.replace(/\\n/g, '<br>')}
-                    </span>
-                    <br><br>
-                    <span style="font-weight: bold; color:red">
-                    <strong style="color: blue;">Coordinates:</strong> <br>
-                    ${marker.LatLng.replace(/\\n/g, '<br>')}
-                    </span>
-                </div>
+              <div style="font-family: Arial, sans-serif;">
+                <strong>${marker.Name}</strong><br>
+                ${marker.tooltip ? marker.tooltip.replace(/\\n/g, '<br>') : ''}
+              </div>
             `;
-
-            // Set the combined content
             infoWindowRef.current?.setContent(content);
             infoWindowRef.current?.open(map, mapMarker);
           });
 
-          // This is to handle the dragend 
-          mapMarker.addListener('dragend', (event: google.maps.MapMouseEvent) => {
-            if (event.latLng) {
-              const newLat = event.latLng.lat();
-              const newLng = event.latLng.lng();
-              
-              // Update the markers state
-              setUpdatedMarkers(prevMarkers => 
-                prevMarkers.map(m => 
-                  m.Name === marker.Name 
-                    ? { 
-                        ...m, 
-                        LatLng: `${newLat}, ${newLng}`, 
-                        Update: '1' 
-                      } 
-                    : m
-                )
-              );
-              
-              // Update connected paths
-              updateConnectedPaths(marker.Name, event.latLng);
-            }
+          mapMarker.addListener('click', () => {
+            const content = `
+              <div style="font-family: Arial, sans-serif;">
+                <strong>${marker.Name}</strong><br>
+                ${marker.Details ? marker.Details.replace(/\\n/g, '<br>') : ''}
+              </div>
+            `;
+            infoWindowRef.current?.setContent(content);
+            infoWindowRef.current?.open(map, mapMarker);
           });
-        }
 
-        markersRef.current.set(marker.Name, mapMarker);
+          if (editMode) {
+            // Handle click on marker event in edit mode
+            mapMarker.addListener('click', () => {
+              // Combine Address and LatLng with proper formatting
+              const content = `
+                  <div style="font-family: Arial, sans-serif;">
+                      <strong style="color: blue;">Address:</strong> <br>
+                      <span style="font-weight: bold; color:red">
+                      ${marker.Address.replace(/\\n/g, '<br>')}
+                      </span>
+                      <br><br>
+                      <span style="font-weight: bold; color:red">
+                      <strong style="color: blue;">Coordinates:</strong> <br>
+                      ${marker.LatLng.replace(/\\n/g, '<br>')}
+                      </span>
+                  </div>
+              `;
+
+              // Set the combined content
+              infoWindowRef.current?.setContent(content);
+              infoWindowRef.current?.open(map, mapMarker);
+            });
+
+            // This is to handle the dragend 
+            mapMarker.addListener('dragend', (event: google.maps.MapMouseEvent) => {
+              if (event.latLng) {
+                const newLat = event.latLng.lat();
+                const newLng = event.latLng.lng();
+                
+                // Update the markers state
+                setUpdatedMarkers(prevMarkers => 
+                  prevMarkers.map(m => 
+                    m.Name === marker.Name 
+                      ? { 
+                          ...m, 
+                          LatLng: `${newLat}, ${newLng}`, 
+                          Update: '1' 
+                        } 
+                      : m
+                  )
+                );
+                
+                // Update connected paths
+                updateConnectedPaths(marker.Name, event.latLng);
+              }
+            });
+          }
+
+          markersRef.current.set(marker.Name, mapMarker);
+        }
+        
+        // Add the processed marker to our temp array
+        tempMarkers.push(updatedMarker);
       }
-    });
+      
+      // Update the state with all processed markers
+      setUpdatedMarkers(tempMarkers);
+      processedMarkersRef.current = tempMarkers;
+    };
+    
+    processMarkers();
 
     // Adjust map bounds
     const bounds = new google.maps.LatLngBounds();
@@ -316,7 +334,13 @@ mapMarker.addListener('click', () => {
         map.setZoom(12);
       }
     }
-  }, [map, markers, editMode, interconnects]);
+
+    // Clean up listeners on component unmount
+    return () => {
+      google.maps.event.removeListener(clickListener);
+      google.maps.event.removeListener(mouseoverListener);
+    };
+  }, [map, markers, editMode]);
 
   // Draw InterConnect paths
   useEffect(() => {
@@ -328,11 +352,20 @@ mapMarker.addListener('click', () => {
     });
     polylinesRef.current.clear();
 
+    // Create a temporary array to store updated interconnects
+    const tempInterconnects: InterConnectSegment[] = [];
+
     interconnects.forEach((segment) => {
-      if (!segment.Name || !segment.WaypointLatLngArray) return;
+      if (!segment.Name || !segment.WaypointLatLngArray) {
+        tempInterconnects.push(segment);
+        return;
+      }
 
       const sourceMarker = markersRef.current.get(segment.Name);
-      if (!sourceMarker) return;
+      if (!sourceMarker) {
+        tempInterconnects.push(segment);
+        return;
+      }
 
       const waypoints = segment.WaypointLatLngArray
         .replace(/[\[\]]/g, '')
@@ -343,7 +376,10 @@ mapMarker.addListener('click', () => {
         })
         .filter(coord => !isNaN(coord.lat) && !isNaN(coord.lng));
 
-      if (waypoints.length === 0) return;
+      if (waypoints.length === 0) {
+        tempInterconnects.push(segment);
+        return;
+      }
 
       const path = [sourceMarker.position!, ...waypoints];
 
@@ -394,7 +430,11 @@ mapMarker.addListener('click', () => {
       }
 
       polylinesRef.current.set(segment.Name, polyline);
+      tempInterconnects.push(segment);
     });
+
+    // Update the state with all processed interconnects
+    setUpdatedInterconnects(tempInterconnects);
   }, [map, interconnects, editMode]);
 
   // this is the function to save image 
@@ -467,27 +507,31 @@ mapMarker.addListener('click', () => {
           const lng = typeof position.lng === 'function' ? position.lng() : position.lng;
   
           // Find the original marker to preserve other properties
-          const originalMarker = markers.find(m => m.Name === markerName);
+          const originalMarker = updatedMarkers.find(m => m.Name === markerName) || 
+                               markers.find(m => m.Name === markerName);
   
-          allCurrentMarkers.push({
-            ...originalMarker,
-            Name: markerName,
-            LatLng: `${lat}, ${lng}`,
-            Update: '1',
-            Selected: originalMarker?.Selected || 'DefaultSelected', 
-            Address: originalMarker?.Address || '', 
-            iconSVGfile: originalMarker?.iconSVGfile || '', 
-            AlertStatus: originalMarker?.AlertStatus || '',
-            tooltip: originalMarker?.tooltip || '',
-            Details: originalMarker?.Details || '',
-            iconColor: originalMarker?.iconColor, 
-            iconSize: originalMarker?.iconSize, 
-          });
+          if (originalMarker) {
+            allCurrentMarkers.push({
+              ...originalMarker,
+              LatLng: `${lat}, ${lng}`,
+              Update: '1'
+            });
+          }
         }
       } catch (error) {
         console.error(`Error capturing marker ${markerName}:`, error);
       }
     });
+
+    // If no markers have been added to the map yet, use the processed markers
+    if (allCurrentMarkers.length === 0 && processedMarkersRef.current.length > 0) {
+      allCurrentMarkers.push(...processedMarkersRef.current);
+    }
+
+    // If we still have no markers, fall back to the original props
+    if (allCurrentMarkers.length === 0 && markers.length > 0) {
+      allCurrentMarkers.push(...markers);
+    }
 
     // this is to capture all interconnects
     polylinesRef.current.forEach((polyline, segmentName) => {
@@ -506,28 +550,30 @@ mapMarker.addListener('click', () => {
             .join(', ');
     
           // Find the original interconnect to preserve other properties
-          const originalInterconnect = interconnects.find(ic => ic.Name === segmentName);
+          const originalInterconnect = updatedInterconnects.find(ic => ic.Name === segmentName) ||
+                                    interconnects.find(ic => ic.Name === segmentName);
     
-          allCurrentInterconnects.push({
-            ...originalInterconnect,
-            Name: segmentName,
-            WaypointLatLngArray: waypointPath,
-            Update: '1', // Default 'Update' value
-            Desc: originalInterconnect?.Desc || 'Default Description', 
-            LineType: originalInterconnect?.LineType || 'DefaultLineType', 
-            LineWidthpx: originalInterconnect?.LineWidthpx || '1px', 
-            LineColor: originalInterconnect?.LineColor || '#000000', 
-            LineAttribute: originalInterconnect?.LineAttribute || 'DefaultAttribute', 
-            LineStyle: originalInterconnect?.LineStyle || 'solid', 
-            LineEndIcon: originalInterconnect?.LineEndIcon || 'None', 
-            LineHoverColor: originalInterconnect?.LineHoverColor, 
-            LineClickEventMessage: originalInterconnect?.LineClickEventMessage,
-          });
+          if (originalInterconnect) {
+            allCurrentInterconnects.push({
+              ...originalInterconnect,
+              WaypointLatLngArray: waypointPath,
+              Update: '1'
+            });
+          }
         }
       } catch (error) {
         console.error(`Error capturing interconnect ${segmentName}:`, error);
       }
     });
+
+    // If no interconnects in map, use the state or props
+    if (allCurrentInterconnects.length === 0) {
+      if (updatedInterconnects.length > 0) {
+        allCurrentInterconnects.push(...updatedInterconnects);
+      } else if (interconnects.length > 0) {
+        allCurrentInterconnects.push(...interconnects);
+      }
+    }
   
     return {
       markers: allCurrentMarkers,
@@ -550,7 +596,25 @@ mapMarker.addListener('click', () => {
     }
   };
 
+  // Add this debugging function to check the data before showing the popup
   const handlePreview = () => {
+    // Directly capture the current map state
+    const { markers: capturedMarkers, interconnects: capturedInterconnects } = captureAllMapElements();
+    
+    console.log('Current markers data:', capturedMarkers);
+    console.log('Current interconnects data:', capturedInterconnects);
+    
+    // Check if there's actually data to display
+    if (capturedMarkers.length === 0 && capturedInterconnects.length === 0) {
+      alert('No data available to preview. Try adding markers or interconnects first.');
+      return;
+    }
+    
+    // Update state with captured data
+    setUpdatedMarkers(capturedMarkers);
+    setUpdatedInterconnects(capturedInterconnects);
+    
+    // Then show the popup
     setShowPopup(true);
   };
 
@@ -558,13 +622,14 @@ mapMarker.addListener('click', () => {
     <div>
       {/* Popup for JSON Preview */}
       {showPopup && (
-  <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
-    <DataPreview
-      data={markers} 
-      onClose={() => setShowPopup(false)}
-    />
-  </div>
-)}
+        <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-30">
+          <DataPreview
+            markers={updatedMarkers} 
+            interconnects={updatedInterconnects}
+            onClose={() => setShowPopup(false)}
+          />
+        </div>
+      )}
       <button 
         className="px-4 py-2 bg-blue-500 text-white rounded bt-center" 
         onClick={() => setEditMode(false)}
