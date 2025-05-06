@@ -21,42 +21,69 @@ export async function POST(request: NextRequest) {
       existingInterconnectsCount: existingInterconnects.length 
     });
 
-    // Create maps for quick lookup
-    const existingMarkersMap = new Map(existingMarkers.map((m: any) => [m.Name, m]));
-    const existingInterconnectsMap = new Map(existingInterconnects.map((ic: any) => [ic.Name, ic]));
+    // Create maps for quick lookup using both Name and Update status
+    const existingMarkersMap = new Map();
+    const existingInterconnectsMap = new Map();
 
-    // Update or add new markers
+    // First, add existing items to maps
+    existingMarkers.forEach((marker: any) => {
+      if (marker.Name) {
+        const key = `${marker.Name}_${marker.Update || '0'}`;
+        existingMarkersMap.set(key, marker);
+      }
+    });
+
+    existingInterconnects.forEach((interconnect: any) => {
+      if (interconnect.Name) {
+        const key = `${interconnect.Name}_${interconnect.Update || '0'}`;
+        existingInterconnectsMap.set(key, interconnect);
+      }
+    });
+
+    // Process new markers
+    const updatedMarkers = new Set();
     markers.forEach((marker: any) => {
-      if (marker.Name) {  // Only update if marker has a name
-        console.log('Updating marker:', marker.Name);
-        existingMarkersMap.set(marker.Name, marker);
+      if (marker.Name) {
+        const key = `${marker.Name}_${marker.Update || '0'}`;
+        if (!existingMarkersMap.has(key)) {
+          existingMarkersMap.set(key, marker);
+        }
+        updatedMarkers.add(marker.Name);
       }
     });
 
-    // Update or add new interconnects
+    // Process new interconnects
+    const updatedInterconnects = new Set();
     interconnects.forEach((interconnect: any) => {
-      if (interconnect.Name) {  // Only update if interconnect has a name
-        console.log('Updating interconnect:', interconnect.Name);
-        existingInterconnectsMap.set(interconnect.Name, interconnect);
+      if (interconnect.Name) {
+        const key = `${interconnect.Name}_${interconnect.Update || '0'}`;
+        if (!existingInterconnectsMap.has(key)) {
+          existingInterconnectsMap.set(key, interconnect);
+        }
+        updatedInterconnects.add(interconnect.Name);
       }
     });
 
-    // Convert maps back to arrays
-    const updatedMarkers = Array.from(existingMarkersMap.values());
-    const updatedInterconnects = Array.from(existingInterconnectsMap.values());
-    console.log('Updated data:', { 
-      updatedMarkersCount: updatedMarkers.length, 
-      updatedInterconnectsCount: updatedInterconnects.length 
+    // Convert maps to arrays and filter out duplicates
+    const finalMarkers = Array.from(existingMarkersMap.values())
+      .filter((marker: any) => updatedMarkers.has(marker.Name));
+    
+    const finalInterconnects = Array.from(existingInterconnectsMap.values())
+      .filter((interconnect: any) => updatedInterconnects.has(interconnect.Name));
+
+    console.log('Final data:', { 
+      markersCount: finalMarkers.length, 
+      interconnectsCount: finalInterconnects.length 
     });
 
     // Write markers to SiteMarkers.json
     console.log('Writing markers to file...');
-    await fs.writeFile(markersFilePath, JSON.stringify(updatedMarkers, null, 2), 'utf8');
+    await fs.writeFile(markersFilePath, JSON.stringify(finalMarkers, null, 2), 'utf8');
     console.log('Markers file written successfully');
 
     // Write interconnects to InterConnectSegments.json
     console.log('Writing interconnects to file...');
-    await fs.writeFile(interconnectsFilePath, JSON.stringify(updatedInterconnects, null, 2), 'utf8');
+    await fs.writeFile(interconnectsFilePath, JSON.stringify(finalInterconnects, null, 2), 'utf8');
     console.log('Interconnects file written successfully');
 
     // Verify the files were written correctly
@@ -70,8 +97,8 @@ export async function POST(request: NextRequest) {
     // Return success response with updated data
     return NextResponse.json({ 
       message: 'Data saved successfully',
-      markers: updatedMarkers,
-      interconnects: updatedInterconnects
+      markers: finalMarkers,
+      interconnects: finalInterconnects
     }, { status: 200 });
   } catch (error) {
     // Log the error

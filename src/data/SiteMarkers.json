@@ -1,45 +1,9 @@
 [
   {
-    "Name": "Anchorage",
+    "Name": "Gazamni, Niger",
     "Selected": "0",
     "Update": "1",
-    "LatLng": "18.042770280094782, -2.0896670486329185",
-    "Address": "{Address: \"\"3211 Providence Dr\"\", City: \"\"Anchorage\"\", State: \"\"Alaska\"\", ZIP: \"\"99508\"\", Country: \"\"USA\"\"}  ",
-    "iconSVGfile": "myicon.svg",
-    "AlertStatus": "0",
-    "tooltip": "This is the University of Alaska\\nThis is Tooltip line3",
-    "Details": "This is AK Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line5",
-    "": ""
-  },
-  {
-    "Name": "Zinder Region, Niger",
-    "Selected": "0",
-    "Update": "1",
-    "LatLng": "15.687875547362225, 9.863457951367053",
-    "Address": "{Address: \"\"3211 Providence Dr\"\", City: \"\"Anchorage\"\", State: \"\"Alaska\"\", ZIP: \"\"99508\"\", Country: \"\"USA\"\"}  ",
-    "iconSVGfile": "myicon.svg",
-    "AlertStatus": "0",
-    "tooltip": "This is the University of Alaska\\nThis is Tooltip line3",
-    "Details": "This is AK Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line5",
-    "": ""
-  },
-  {
-    "Name": "Irhem n' Ou Laïd, Morocco",
-    "Selected": "0",
-    "Update": "1",
-    "LatLng": "32.083776696805295, -5.781073298632926",
-    "Address": "{Address: \"\"3211 Providence Dr\"\", City: \"\"Anchorage\"\", State: \"\"Alaska\"\", ZIP: \"\"99508\"\", Country: \"\"USA\"\"}  ",
-    "iconSVGfile": "myicon.svg",
-    "AlertStatus": "0",
-    "tooltip": "This is the University of Alaska\\nThis is Tooltip line3",
-    "Details": "This is AK Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line5",
-    "": ""
-  },
-  {
-    "Name": "Hodh Chargui, Mauritania",
-    "Selected": "0",
-    "Update": "1",
-    "LatLng": "19.62322860542697, -7.450995173632926",
+    "LatLng": "14.329634362151369, 10.566582951367053",
     "Address": "{Address: \"\"3211 Providence Dr\"\", City: \"\"Anchorage\"\", State: \"\"Alaska\"\", ZIP: \"\"99508\"\", Country: \"\"USA\"\"}  ",
     "iconSVGfile": "myicon.svg",
     "AlertStatus": "0",
