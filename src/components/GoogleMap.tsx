@@ -68,12 +68,6 @@ export default function GoogleMap({
 
       const google = await loader.load();
 
-      // Define the bounds (adjust the coordinates as needed)
-      const allowedBounds = new google.maps.LatLngBounds(
-        new google.maps.LatLng(-85, -180),
-        new google.maps.LatLng(85, 180)
-      );
-
       const newMap = new google.maps.Map(mapRef.current, {
         zoom: 4,
         mapTypeControl: true,
@@ -87,18 +81,38 @@ export default function GoogleMap({
           },
         ],
         mapId: "4504f8b37365c3d0",
-        restriction: {
-          latLngBounds: allowedBounds,
-          strictBounds: true,
-        },
       });
 
       setMap(newMap);
       infoWindowRef.current = new google.maps.InfoWindow();
+
+      // Set initial bounds based on markers
+      const bounds = new google.maps.LatLngBounds();
+      let hasValidMarkers = false;
+
+      markers.forEach((marker) => {
+        const position = parseLatLng(marker.LatLng);
+        if (position) {
+          bounds.extend(position);
+          hasValidMarkers = true;
+        }
+      });
+
+      if (hasValidMarkers) {
+        newMap.fitBounds(bounds);
+        // Add some padding to the bounds
+        const padding = {
+          top: 50,
+          right: 50,
+          bottom: 50,
+          left: 50,
+        };
+        newMap.panToBounds(bounds, padding);
+      }
     };
 
     initMap();
-  }, []);
+  }, [markers]);
 
   // Update local state when props change
   useEffect(() => {
@@ -116,43 +130,46 @@ export default function GoogleMap({
     );
   };
 
-  // Update interconnect paths when a marker is moved
-  const updateConnectedPaths = (
-    markerName: string,
+  // Update connected paths when a marker is moved
+  const updateConnectedPaths = async (
+    oldMarkerName: string,
+    newMarkerName: string,
     newPosition: google.maps.LatLng
   ) => {
-    const connectedInterconnects = findConnectedInterconnects(markerName);
+    const connectedInterconnects = findConnectedInterconnects(oldMarkerName);
 
     connectedInterconnects.forEach((interconnect) => {
-      if (!interconnect.Source || !interconnect.Target) return; // Skip if Source or Target is missing
+      if (!interconnect.Source || !interconnect.Target) return;
 
       const polylineKey = `${interconnect.Source}-${interconnect.Target}`;
       const polyline = polylinesRef.current.get(polylineKey);
 
       if (polyline) {
-        // Get current path
         const currentPath = polyline.getPath().getArray();
         let newPath;
 
         // Update the appropriate end of the path based on whether this is source or target
-        if (interconnect.Source === markerName) {
+        if (interconnect.Source === oldMarkerName) {
           newPath = [newPosition, ...currentPath.slice(1)];
-        } else if (interconnect.Target === markerName) {
+        } else if (interconnect.Target === oldMarkerName) {
           newPath = [...currentPath.slice(0, -1), newPosition];
         }
 
         if (newPath) {
           polyline.setPath(newPath);
 
-          // Update the interconnect data
+          // Update the interconnect data with new marker name
           setUpdatedInterconnects((prevInterconnects) =>
             prevInterconnects.map((ic) =>
-              ic.Source === interconnect.Source &&
-              ic.Target === interconnect.Target
+              ic.Source === oldMarkerName || ic.Target === oldMarkerName
                 ? {
                     ...ic,
+                    Source:
+                      ic.Source === oldMarkerName ? newMarkerName : ic.Source,
+                    Target:
+                      ic.Target === oldMarkerName ? newMarkerName : ic.Target,
                     WaypointLatLngArray: newPath
-                      .slice(1, -1) // Remove first and last points (source and target)
+                      .slice(1, -1)
                       .map((p: google.maps.LatLng) => {
                         const lat =
                           typeof p.lat === "function" ? p.lat() : p.lat;
@@ -335,13 +352,44 @@ export default function GoogleMap({
             // This is to handle the dragend
             mapMarker.addListener(
               "dragend",
-              (event: google.maps.MapMouseEvent) => {
+              async (event: google.maps.MapMouseEvent) => {
                 if (event.latLng) {
                   const newLat = event.latLng.lat();
                   const newLng = event.latLng.lng();
 
+                  // Get detailed address information for the new location
+                  const addressInfo = await reverseGeocode({
+                    lat: newLat,
+                    lng: newLng,
+                  });
+                  const newName = `${addressInfo.city}, ${addressInfo.country}`;
+
+                  // Create formatted address string
+                  const formattedAddress = JSON.stringify({
+                    Address: addressInfo.street || "",
+                    City: addressInfo.city || "",
+                    State: addressInfo.state || "",
+                    ZIP: addressInfo.postalCode || "",
+                    Country: addressInfo.country || "",
+                  }).replace(/"/g, '""');
+
+                  // Create new tooltip and details
+                  const newTooltip = `This is ${
+                    addressInfo.city
+                  } tooltip line1\\nLocation: ${
+                    addressInfo.street || addressInfo.city
+                  }\\n${addressInfo.country}`;
+                  const newDetails = `This is ${
+                    addressInfo.city
+                  } Details line1\\nAddress: ${
+                    addressInfo.street || ""
+                  }\\nCity: ${addressInfo.city}\\nCountry: ${
+                    addressInfo.country
+                  }`;
+
                   console.log("Marker dragged:", marker.Name);
                   console.log("New position:", { lat: newLat, lng: newLng });
+                  console.log("New name:", newName);
 
                   // Store the previous state if not already stored
                   if (!previousMarkerStates.has(marker.Name)) {
@@ -353,13 +401,17 @@ export default function GoogleMap({
                     });
                   }
 
-                  // Update the markers state
+                  // Update the markers state with new name, position, and details
                   setUpdatedMarkers((prevMarkers) =>
                     prevMarkers.map((m) =>
                       m.Name === marker.Name
                         ? {
                             ...m,
+                            Name: newName,
                             LatLng: `${newLat}, ${newLng}`,
+                            Address: formattedAddress,
+                            tooltip: newTooltip,
+                            Details: newDetails,
                             Update: "1",
                           }
                         : m
@@ -367,10 +419,47 @@ export default function GoogleMap({
                   );
 
                   // Add to dragged markers set
-                  setDraggedMarkers((prev) => new Set([...prev, marker.Name]));
+                  setDraggedMarkers((prev) => new Set([...prev, newName]));
 
-                  // Update connected paths
-                  updateConnectedPaths(marker.Name, event.latLng);
+                  // Update connected paths with new name
+                  await updateConnectedPaths(
+                    marker.Name,
+                    newName,
+                    event.latLng
+                  );
+
+                  // Update the marker reference with new name and tooltip
+                  const currentMarker = markersRef.current.get(marker.Name);
+                  if (currentMarker) {
+                    currentMarker.title = newName;
+
+                    // Update the mouseover event listener with new tooltip
+                    currentMarker.addListener("mouseover", () => {
+                      const content = `
+                        <div style="font-family: Arial, sans-serif;">
+                          <strong>${newName}</strong><br>
+                          ${newTooltip.replace(/\\n/g, "<br>")}
+                        </div>
+                      `;
+                      infoWindowRef.current?.setContent(content);
+                      infoWindowRef.current?.open(map, currentMarker);
+                    });
+
+                    // Update the click event listener with new details
+                    currentMarker.addListener("click", () => {
+                      const content = `
+                        <div style="font-family: Arial, sans-serif;">
+                          <strong>${newName}</strong><br>
+                          ${newDetails.replace(/\\n/g, "<br>")}
+                        </div>
+                      `;
+                      infoWindowRef.current?.setContent(content);
+                      infoWindowRef.current?.open(map, currentMarker);
+                    });
+
+                    markersRef.current.delete(marker.Name);
+                    markersRef.current.set(newName, currentMarker);
+                  }
                 }
               }
             );

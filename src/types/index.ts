@@ -6,6 +6,14 @@ export interface Address {
   Country: string;
 }
 
+export interface AddressComponents {
+  city: string;
+  country: string;
+  street?: string;
+  state?: string;
+  postalCode?: string;
+}
+
 // this is sitemaker interface
 export interface SiteMarker {
   Name: string;
