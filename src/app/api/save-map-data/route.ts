@@ -21,55 +21,29 @@ export async function POST(request: NextRequest) {
       existingInterconnectsCount: existingInterconnects.length 
     });
 
-    // Create maps for quick lookup using both Name and Update status
+    // Create maps for quick lookup
     const existingMarkersMap = new Map();
-    const existingInterconnectsMap = new Map();
+    const existingInterconnectsMap = new Map(
+      existingInterconnects.map((ic: any) => [`${ic.Source}__${ic.Target}`, ic])
+    );
 
-    // First, add existing items to maps
-    existingMarkers.forEach((marker: any) => {
-      if (marker.Name) {
-        const key = `${marker.Name}_${marker.Update || '0'}`;
-        existingMarkersMap.set(key, marker);
-      }
-    });
-
-    existingInterconnects.forEach((interconnect: any) => {
-      if (interconnect.Name) {
-        const key = `${interconnect.Name}_${interconnect.Update || '0'}`;
-        existingInterconnectsMap.set(key, interconnect);
-      }
-    });
-
-    // Process new markers
-    const updatedMarkers = new Set();
+    // Update or add new markers
     markers.forEach((marker: any) => {
       if (marker.Name) {
-        const key = `${marker.Name}_${marker.Update || '0'}`;
-        if (!existingMarkersMap.has(key)) {
-          existingMarkersMap.set(key, marker);
-        }
-        updatedMarkers.add(marker.Name);
+        existingMarkersMap.set(marker.Name, marker);
       }
     });
 
-    // Process new interconnects
-    const updatedInterconnects = new Set();
+    // Update or add new interconnects
     interconnects.forEach((interconnect: any) => {
-      if (interconnect.Name) {
-        const key = `${interconnect.Name}_${interconnect.Update || '0'}`;
-        if (!existingInterconnectsMap.has(key)) {
-          existingInterconnectsMap.set(key, interconnect);
-        }
-        updatedInterconnects.add(interconnect.Name);
+      if (interconnect.Source && interconnect.Target) {
+        existingInterconnectsMap.set(`${interconnect.Source}__${interconnect.Target}`, interconnect);
       }
     });
 
-    // Convert maps to arrays and filter out duplicates
-    const finalMarkers = Array.from(existingMarkersMap.values())
-      .filter((marker: any) => updatedMarkers.has(marker.Name));
-    
-    const finalInterconnects = Array.from(existingInterconnectsMap.values())
-      .filter((interconnect: any) => updatedInterconnects.has(interconnect.Name));
+    // Convert maps back to arrays
+    const finalMarkers = Array.from(existingMarkersMap.values());
+    const finalInterconnects = Array.from(existingInterconnectsMap.values());
 
     console.log('Final data:', { 
       markersCount: finalMarkers.length, 

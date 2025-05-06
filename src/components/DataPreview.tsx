@@ -13,8 +13,11 @@ interface PopupDataViewProps {
 const MarkerCard: React.FC<{
   marker: SiteMarker;
   previousState?: SiteMarker;
-}> = ({ marker, previousState }) => {
-  const { data: currentData, loading: currentLoading } = useGeocode(marker.LatLng);
+  index: number;
+}> = ({ marker, previousState, index }) => {
+  const { data: currentData, loading: currentLoading } = useGeocode(
+    marker.LatLng
+  );
   const { data: previousData, loading: previousLoading } = useGeocode(
     previousState?.LatLng || ""
   );
@@ -60,7 +63,7 @@ const MarkerCard: React.FC<{
               borderRadius: "50%",
             }}
           ></span>
-          {marker.Name || `Marker ${marker.id}`}
+          {marker.Name || `Marker ${index + 1}`}
         </h4>
         {hasChanges && (
           <span
@@ -210,9 +213,10 @@ const MarkerCard: React.FC<{
   );
 };
 
-const InterconnectCard: React.FC<{ interconnect: InterConnectSegment }> = ({
-  interconnect,
-}) => {
+const InterconnectCard: React.FC<{
+  interconnect: InterConnectSegment;
+  index: number;
+}> = ({ interconnect, index }) => {
   return (
     <div
       style={{
@@ -241,7 +245,7 @@ const InterconnectCard: React.FC<{ interconnect: InterConnectSegment }> = ({
             fontWeight: "600",
           }}
         >
-          {interconnect.Name || `Interconnect ${interconnect.id}`}
+          {interconnect.Name || `Interconnect ${index + 1}`}
         </h4>
         {interconnect.Update === "1" && (
           <span
@@ -487,7 +491,9 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
         }}
       >
         {currentData.length === 0 && (
-          <div style={{ textAlign: "center", padding: "40px 0", color: "#666" }}>
+          <div
+            style={{ textAlign: "center", padding: "40px 0", color: "#666" }}
+          >
             {dataType === "markers"
               ? "No markers available"
               : "No interconnects available"}
@@ -507,6 +513,7 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
                 key={index}
                 marker={marker}
                 previousState={getPreviousMarkerState(marker.Name)}
+                index={index}
               />
             ))}
           </div>
@@ -521,7 +528,11 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
             }}
           >
             {filteredInterconnects.map((interconnect, index) => (
-              <InterconnectCard key={index} interconnect={interconnect} />
+              <InterconnectCard
+                key={index}
+                interconnect={interconnect}
+                index={index}
+              />
             ))}
           </div>
         )}

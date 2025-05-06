@@ -23,7 +23,9 @@ export interface SiteMarker {
 }
 
 export interface InterConnectSegment {
-  Name: string;
+  Source: string;
+  Target: string;
+  Name?: string;
   Desc: string;
   LineType: string;
   LineWidthpx: string;

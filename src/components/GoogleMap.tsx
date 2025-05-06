@@ -108,7 +108,12 @@ export default function GoogleMap({
 
   // Function to find interconnects connected to a marker
   const findConnectedInterconnects = (markerName: string) => {
-    return interconnects.filter((ic) => ic.Name === markerName);
+    return interconnects.filter(
+      (ic) =>
+        ic.Source &&
+        ic.Target && // Ensure Source and Target exist
+        (ic.Source === markerName || ic.Target === markerName)
+    );
   };
 
   // Update interconnect paths when a marker is moved
@@ -119,26 +124,36 @@ export default function GoogleMap({
     const connectedInterconnects = findConnectedInterconnects(markerName);
 
     connectedInterconnects.forEach((interconnect) => {
-      const polyline = polylinesRef.current.get(interconnect.Name);
+      if (!interconnect.Source || !interconnect.Target) return; // Skip if Source or Target is missing
+
+      const polylineKey = `${interconnect.Source}-${interconnect.Target}`;
+      const polyline = polylinesRef.current.get(polylineKey);
 
       if (polyline) {
         // Get current path
         const currentPath = polyline.getPath().getArray();
+        let newPath;
 
-        // Update the first point (source marker position)
-        if (currentPath.length > 0) {
-          const newPath = [newPosition, ...currentPath.slice(1)];
+        // Update the appropriate end of the path based on whether this is source or target
+        if (interconnect.Source === markerName) {
+          newPath = [newPosition, ...currentPath.slice(1)];
+        } else if (interconnect.Target === markerName) {
+          newPath = [...currentPath.slice(0, -1), newPosition];
+        }
+
+        if (newPath) {
           polyline.setPath(newPath);
 
           // Update the interconnect data
           setUpdatedInterconnects((prevInterconnects) =>
             prevInterconnects.map((ic) =>
-              ic.Name === interconnect.Name
+              ic.Source === interconnect.Source &&
+              ic.Target === interconnect.Target
                 ? {
                     ...ic,
                     WaypointLatLngArray: newPath
-                      .slice(1)
-                      .map((p) => {
+                      .slice(1, -1) // Remove first and last points (source and target)
+                      .map((p: google.maps.LatLng) => {
                         const lat =
                           typeof p.lat === "function" ? p.lat() : p.lat;
                         const lng =
@@ -413,31 +428,31 @@ export default function GoogleMap({
     const tempInterconnects: InterConnectSegment[] = [];
 
     interconnects.forEach((segment) => {
-      if (!segment.Name || !segment.WaypointLatLngArray) {
+      if (!segment.Source || !segment.Target) {
         tempInterconnects.push(segment);
         return;
       }
 
-      const sourceMarker = markersRef.current.get(segment.Name);
-      if (!sourceMarker) {
+      const sourceMarker = markersRef.current.get(segment.Source);
+      const targetMarker = markersRef.current.get(segment.Target);
+      if (!sourceMarker || !targetMarker) {
         tempInterconnects.push(segment);
         return;
       }
 
-      const waypoints = segment.WaypointLatLngArray.replace(/[\[\]]/g, "")
+      // Optionally, parse waypoints if you want to support them
+      let path = [sourceMarker.position!];
+      const waypoints = segment.WaypointLatLngArray?.replace(/[\[\]]/g, "")
         .split(",")
         .map((coord) => {
           const [lat, lng] = coord.trim().split(/\s+/).map(Number);
           return { lat, lng };
         })
         .filter((coord) => !isNaN(coord.lat) && !isNaN(coord.lng));
-
-      if (waypoints.length === 0) {
-        tempInterconnects.push(segment);
-        return;
+      if (waypoints && waypoints.length > 0) {
+        path = path.concat(waypoints);
       }
-
-      const path = [sourceMarker.position!, ...waypoints];
+      path.push(targetMarker.position!);
 
       const polyline = new google.maps.Polyline({
         path,
@@ -452,7 +467,9 @@ export default function GoogleMap({
       // Event listeners for polyline
       polyline.addListener("mouseover", () => {
         if (segment.Desc) {
-          infoWindowRef.current?.setContent(`${segment.Name}: ${segment.Desc}`);
+          infoWindowRef.current?.setContent(
+            `${segment.Source} → ${segment.Target}: ${segment.Desc}`
+          );
           infoWindowRef.current?.open(map);
           infoWindowRef.current?.setPosition(path[Math.floor(path.length / 2)]);
         }
@@ -462,36 +479,7 @@ export default function GoogleMap({
         infoWindowRef.current?.close();
       });
 
-      // Update waypoints when polyline is edited
-      if (editMode) {
-        polyline.addListener("path_changed", () => {
-          const newPath = polyline
-            .getPath()
-            .getArray()
-            .map((coord) => ({
-              lat: coord.lat(),
-              lng: coord.lng(),
-            }));
-
-          // Update interconnects state with new waypoint path
-          setUpdatedInterconnects((prevInterconnects) =>
-            prevInterconnects.map((ic) =>
-              ic.Name === segment.Name
-                ? {
-                    ...ic,
-                    WaypointLatLngArray: newPath
-                      .slice(1)
-                      .map((p) => `${p.lat} ${p.lng}`)
-                      .join(", "),
-                    Update: "1",
-                  }
-                : ic
-            )
-          );
-        });
-      }
-
-      polylinesRef.current.set(segment.Name, polyline);
+      polylinesRef.current.set(`${segment.Source}-${segment.Target}`, polyline);
       tempInterconnects.push(segment);
     });
 
