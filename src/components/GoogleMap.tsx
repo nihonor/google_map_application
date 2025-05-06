@@ -554,12 +554,12 @@ export default function GoogleMap({
   };
 
   // this is to capture the current map and save it
-  const captureAllMapElements = () => {
+  const captureAllMapElements = async () => {
     const allCurrentMarkers: SiteMarker[] = [];
     const allCurrentInterconnects: InterConnectSegment[] = [];
 
     // Capture markers
-    markersRef.current.forEach((mapMarker, markerName) => {
+    for (const [markerName, mapMarker] of markersRef.current.entries()) {
       try {
         const position = mapMarker.position;
 
@@ -569,6 +569,12 @@ export default function GoogleMap({
           const lng =
             typeof position.lng === "function" ? position.lng() : position.lng;
 
+          // Get address information for the new location
+          const addressInfo = await reverseGeocode({ lat, lng });
+
+          // Create a new name based on location
+          const newName = `${addressInfo.city}, ${addressInfo.country}`;
+
           // Find the original marker to preserve other properties
           const originalMarker =
             updatedMarkers.find((m) => m.Name === markerName) ||
@@ -577,6 +583,7 @@ export default function GoogleMap({
           if (originalMarker) {
             allCurrentMarkers.push({
               ...originalMarker,
+              Name: newName,
               LatLng: `${lat}, ${lng}`,
               Update: "1",
             });
@@ -585,7 +592,7 @@ export default function GoogleMap({
       } catch (error) {
         console.error(`Error capturing marker ${markerName}:`, error);
       }
-    });
+    }
 
     // If no markers have been added to the map yet, use the processed markers
     if (
@@ -600,8 +607,8 @@ export default function GoogleMap({
       allCurrentMarkers.push(...markers);
     }
 
-    // this is to capture all interconnects
-    polylinesRef.current.forEach((polyline, segmentName) => {
+    // Capture interconnects separately
+    for (const [segmentName, polyline] of polylinesRef.current.entries()) {
       try {
         const path = polyline.getPath();
         if (path) {
@@ -632,7 +639,7 @@ export default function GoogleMap({
       } catch (error) {
         console.error(`Error capturing interconnect ${segmentName}:`, error);
       }
-    });
+    }
 
     // If no interconnects in map, use the state or props
     if (allCurrentInterconnects.length === 0) {
@@ -643,6 +650,11 @@ export default function GoogleMap({
       }
     }
 
+    console.log("Captured data:", {
+      markers: allCurrentMarkers,
+      interconnects: allCurrentInterconnects,
+    });
+
     return {
       markers: allCurrentMarkers,
       interconnects: allCurrentInterconnects,
@@ -650,23 +662,16 @@ export default function GoogleMap({
   };
 
   // This is to save
-  const handleSave = () => {
+  const handleSave = async () => {
     if (fnSave) {
       const { markers: capturedMarkers, interconnects: capturedInterconnects } =
-        captureAllMapElements();
+        await captureAllMapElements();
 
       console.log("Captured Markers:", capturedMarkers);
       console.log("Captured Interconnects:", capturedInterconnects);
 
-      // Only save markers that were dragged
-      const markersToSave = capturedMarkers.filter((marker) =>
-        draggedMarkers.has(marker.Name)
-      );
-      const interconnectsToSave = capturedInterconnects.filter((ic) =>
-        markersToSave.some((marker) => marker.Name === ic.Name)
-      );
-
-      fnSave(markersToSave, interconnectsToSave);
+      // Save all markers and interconnects
+      fnSave(capturedMarkers, capturedInterconnects);
 
       // Clear the dragged markers set and previous states after saving
       setDraggedMarkers(new Set());
@@ -677,10 +682,10 @@ export default function GoogleMap({
     }
   };
 
-  const handlePreview = () => {
+  const handlePreview = async () => {
     // Directly capture the current map state
     const { markers: capturedMarkers, interconnects: capturedInterconnects } =
-      captureAllMapElements();
+      await captureAllMapElements();
 
     console.log("Current markers data:", capturedMarkers);
     console.log("Current interconnects data:", capturedInterconnects);

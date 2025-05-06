@@ -311,8 +311,7 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
                                     marker.LatLng
                                   );
                                   if (loading)
-                                    return <div>Loading address...</div>;
-                                  if (data) {
+                                    return <div>Loading address...</div>;                                  if (data) {
                                     return (
                                       <>
                                         <div>Country: {data.country}</div>
