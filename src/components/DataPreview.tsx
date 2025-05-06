@@ -10,6 +10,340 @@ interface PopupDataViewProps {
   onSave?: () => void;
 }
 
+const MarkerCard: React.FC<{
+  marker: SiteMarker;
+  previousState?: SiteMarker;
+}> = ({ marker, previousState }) => {
+  const { data: currentData, loading: currentLoading } = useGeocode(marker.LatLng);
+  const { data: previousData, loading: previousLoading } = useGeocode(
+    previousState?.LatLng || ""
+  );
+  const hasChanges = previousState && previousState.LatLng !== marker.LatLng;
+
+  return (
+    <div
+      style={{
+        border: "1px solid #e9ecef",
+        borderRadius: "8px",
+        overflow: "hidden",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div
+        style={{
+          padding: "12px 16px",
+          backgroundColor: "#f8f9fa",
+          borderBottom: "1px solid #e9ecef",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h4
+          style={{
+            margin: 0,
+            fontSize: "16px",
+            color: "#212529",
+            fontWeight: "600",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          <span
+            style={{
+              display: "inline-block",
+              width: "10px",
+              height: "10px",
+              backgroundColor: marker.iconColor || "#0d6efd",
+              borderRadius: "50%",
+            }}
+          ></span>
+          {marker.Name || `Marker ${marker.id}`}
+        </h4>
+        {hasChanges && (
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "500",
+              backgroundColor: "#ffc107",
+              color: "#212529",
+            }}
+          >
+            Modified
+          </span>
+        )}
+      </div>
+      <div style={{ padding: "16px" }}>
+        <div style={{ marginBottom: "12px" }}>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#6c757d",
+              marginBottom: "4px",
+            }}
+          >
+            Location
+          </div>
+          <div
+            style={{
+              fontSize: "14px",
+              padding: "6px 10px",
+              backgroundColor: "#f1f3f5",
+              borderRadius: "4px",
+            }}
+          >
+            {hasChanges ? (
+              <div>
+                <div style={{ color: "#dc3545", marginBottom: "4px" }}>
+                  Previous Location:
+                  <div style={{ marginLeft: "12px", marginTop: "4px" }}>
+                    {previousLoading ? (
+                      <div>Loading address...</div>
+                    ) : previousData ? (
+                      <>
+                        <div>Country: {previousData.country}</div>
+                        <div>City: {previousData.city}</div>
+                        <div style={{ marginTop: "4px", color: "#666" }}>
+                          Coordinates: {previousState?.LatLng}
+                        </div>
+                      </>
+                    ) : (
+                      <div>Coordinates: {previousState?.LatLng}</div>
+                    )}
+                  </div>
+                </div>
+                <div style={{ color: "#28a745" }}>
+                  Current Location:
+                  <div style={{ marginLeft: "12px", marginTop: "4px" }}>
+                    {currentLoading ? (
+                      <div>Loading address...</div>
+                    ) : currentData ? (
+                      <>
+                        <div>Country: {currentData.country}</div>
+                        <div>City: {currentData.city}</div>
+                        <div style={{ marginTop: "4px", color: "#666" }}>
+                          Coordinates: {marker.LatLng}
+                        </div>
+                      </>
+                    ) : (
+                      <div>Coordinates: {marker.LatLng}</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div>
+                {currentLoading ? (
+                  <div>Loading address...</div>
+                ) : currentData ? (
+                  <>
+                    <div>Country: {currentData.country}</div>
+                    <div>City: {currentData.city}</div>
+                    <div style={{ marginTop: "4px", color: "#666" }}>
+                      Coordinates: {marker.LatLng}
+                    </div>
+                  </>
+                ) : (
+                  <div>Coordinates: {marker.LatLng}</div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {marker.tooltip && (
+          <div style={{ marginBottom: "12px" }}>
+            <div
+              style={{
+                fontSize: "13px",
+                color: "#6c757d",
+                marginBottom: "4px",
+              }}
+            >
+              Tooltip
+            </div>
+            <div style={{ fontSize: "14px" }}>
+              {marker.tooltip.replace(/\\n/g, " ")}
+            </div>
+          </div>
+        )}
+
+        {marker.Address && (
+          <div>
+            <div
+              style={{
+                fontSize: "13px",
+                color: "#6c757d",
+                marginBottom: "4px",
+              }}
+            >
+              Address
+            </div>
+            <div style={{ fontSize: "14px" }}>
+              {typeof marker.Address === "string" &&
+              marker.Address.includes("Address") ? (
+                <>
+                  <div>Previous: {previousState?.LatLng}</div>
+                  <div>Current: {marker.LatLng}</div>
+                  {currentData && (
+                    <div style={{ marginTop: "8px" }}>
+                      <div>Country: {currentData.country}</div>
+                      <div>City: {currentData.city}</div>
+                      <div style={{ marginTop: "4px", color: "#666" }}>
+                        Coordinates: {marker.LatLng}
+                      </div>
+                    </div>
+                  )}
+                </>
+              ) : (
+                marker.Address
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const InterconnectCard: React.FC<{ interconnect: InterConnectSegment }> = ({
+  interconnect,
+}) => {
+  return (
+    <div
+      style={{
+        border: "1px solid #e9ecef",
+        borderRadius: "8px",
+        overflow: "hidden",
+        transition: "transform 0.2s, box-shadow 0.2s",
+        boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
+      }}
+    >
+      <div
+        style={{
+          padding: "12px 16px",
+          backgroundColor: "#f8f9fa",
+          borderBottom: "1px solid #e9ecef",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        <h4
+          style={{
+            margin: 0,
+            fontSize: "16px",
+            color: "#212529",
+            fontWeight: "600",
+          }}
+        >
+          {interconnect.Name || `Interconnect ${interconnect.id}`}
+        </h4>
+        {interconnect.Update === "1" && (
+          <span
+            style={{
+              padding: "3px 8px",
+              borderRadius: "4px",
+              fontSize: "12px",
+              fontWeight: "500",
+              backgroundColor: "#ffc107",
+              color: "#212529",
+            }}
+          >
+            Modified
+          </span>
+        )}
+      </div>
+      <div style={{ padding: "16px" }}>
+        <div style={{ marginBottom: "12px" }}>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#6c757d",
+              marginBottom: "4px",
+            }}
+          >
+            Line Color
+          </div>
+          <div
+            style={{
+              fontSize: "14px",
+              padding: "6px 10px",
+              backgroundColor: "#f1f3f5",
+              borderRadius: "4px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+            }}
+          >
+            <span
+              style={{
+                display: "inline-block",
+                width: "16px",
+                height: "16px",
+                backgroundColor: interconnect.LineColor || "#000",
+                borderRadius: "4px",
+              }}
+            ></span>
+            {interconnect.LineColor || "Default"}
+          </div>
+        </div>
+
+        <div style={{ marginBottom: "12px" }}>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#6c757d",
+              marginBottom: "4px",
+            }}
+          >
+            Line Width
+          </div>
+          <div
+            style={{
+              fontSize: "14px",
+              padding: "6px 10px",
+              backgroundColor: "#f1f3f5",
+              borderRadius: "4px",
+            }}
+          >
+            {interconnect.LineWidthpx || "1"}px
+          </div>
+        </div>
+
+        <div>
+          <div
+            style={{
+              fontSize: "13px",
+              color: "#6c757d",
+              marginBottom: "4px",
+            }}
+          >
+            Waypoints
+          </div>
+          <div
+            style={{
+              fontSize: "14px",
+              padding: "6px 10px",
+              backgroundColor: "#f1f3f5",
+              borderRadius: "4px",
+              fontFamily: "monospace",
+              maxHeight: "80px",
+              overflowY: "auto",
+            }}
+          >
+            {interconnect.WaypointLatLngArray || "No waypoints"}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DataPreview: React.FC<PopupDataViewProps> = ({
   markers,
   interconnects,
@@ -23,22 +357,18 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
   );
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Function to get previous state of a marker
   const getPreviousMarkerState = (markerName: string) => {
     return previousMarkers.find((m) => m.Name === markerName);
   };
 
-  // Filter markers based on search query
   const filteredMarkers = markers.filter((marker) =>
     marker.Name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Filter interconnects based on search query
   const filteredInterconnects = interconnects.filter((ic) =>
     ic.Name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Get current data based on selected type
   const currentData =
     dataType === "markers" ? filteredMarkers : filteredInterconnects;
 
@@ -61,7 +391,6 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
         fontFamily: "Arial, sans-serif",
       }}
     >
-      {/* Header with tabs */}
       <div
         style={{
           backgroundColor: "#f8f9fa",
@@ -107,7 +436,6 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
         </div>
       </div>
 
-      {/* View options */}
       <div style={{ display: "flex", borderBottom: "1px solid #e9ecef" }}>
         <button
           onClick={() => setDataType("markers")}
@@ -151,26 +479,21 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
         </button>
       </div>
 
-      {/* Content container */}
       <div
         style={{
           padding: "20px",
           overflowY: "auto",
-          maxHeight: "calc(85vh - 118px)", // Adjust based on header height
+          maxHeight: "calc(85vh - 118px)",
         }}
       >
-        {/* Display message if no data or no search results */}
         {currentData.length === 0 && (
-          <div
-            style={{ textAlign: "center", padding: "40px 0", color: "#666" }}
-          >
+          <div style={{ textAlign: "center", padding: "40px 0", color: "#666" }}>
             {dataType === "markers"
               ? "No markers available"
               : "No interconnects available"}
           </div>
         )}
 
-        {/* Card View */}
         {dataType === "markers" && filteredMarkers.length > 0 && (
           <div
             style={{
@@ -179,266 +502,16 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
               gap: "16px",
             }}
           >
-            {filteredMarkers.map((marker, index) => {
-              const previousState = getPreviousMarkerState(marker.Name);
-              const hasChanges =
-                previousState && previousState.LatLng !== marker.LatLng;
-
-              return (
-                <div
-                  key={index}
-                  style={{
-                    border: "1px solid #e9ecef",
-                    borderRadius: "8px",
-                    overflow: "hidden",
-                    transition: "transform 0.2s, box-shadow 0.2s",
-                    boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                  }}
-                >
-                  <div
-                    style={{
-                      padding: "12px 16px",
-                      backgroundColor: "#f8f9fa",
-                      borderBottom: "1px solid #e9ecef",
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
-                  >
-                    <h4
-                      style={{
-                        margin: 0,
-                        fontSize: "16px",
-                        color: "#212529",
-                        fontWeight: "600",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-block",
-                          width: "10px",
-                          height: "10px",
-                          backgroundColor: marker.iconColor || "#0d6efd",
-                          borderRadius: "50%",
-                        }}
-                      ></span>
-                      {marker.Name || `Marker ${index + 1}`}
-                    </h4>
-                    {hasChanges && (
-                      <span
-                        style={{
-                          padding: "3px 8px",
-                          borderRadius: "4px",
-                          fontSize: "12px",
-                          fontWeight: "500",
-                          backgroundColor: "#ffc107",
-                          color: "#212529",
-                        }}
-                      >
-                        Modified
-                      </span>
-                    )}
-                  </div>
-                  <div style={{ padding: "16px" }}>
-                    {/* Location info with previous state comparison */}
-                    <div style={{ marginBottom: "12px" }}>
-                      <div
-                        style={{
-                          fontSize: "13px",
-                          color: "#6c757d",
-                          marginBottom: "4px",
-                        }}
-                      >
-                        Location
-                      </div>
-                      <div
-                        style={{
-                          fontSize: "14px",
-                          padding: "6px 10px",
-                          backgroundColor: "#f1f3f5",
-                          borderRadius: "4px",
-                        }}
-                      >
-                        {hasChanges ? (
-                          <div>
-                            <div
-                              style={{ color: "#dc3545", marginBottom: "4px" }}
-                            >
-                              Previous Location:
-                              <div
-                                style={{ marginLeft: "12px", marginTop: "4px" }}
-                              >
-                                {(() => {
-                                  const { data, loading } = useGeocode(
-                                    previousState?.LatLng
-                                  );
-                                  if (loading)
-                                    return <div>Loading address...</div>;
-                                  if (data) {
-                                    return (
-                                      <>
-                                        <div>Country: {data.country}</div>
-                                        <div>City: {data.city}</div>
-                                        <div
-                                          style={{
-                                            marginTop: "4px",
-                                            color: "#666",
-                                          }}
-                                        >
-                                          Coordinates: {previousState?.LatLng}
-                                        </div>
-                                      </>
-                                    );
-                                  }
-                                  return (
-                                    <div>
-                                      Coordinates: {previousState?.LatLng}
-                                    </div>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                            <div style={{ color: "#28a745" }}>
-                              Current Location:
-                              <div
-                                style={{ marginLeft: "12px", marginTop: "4px" }}
-                              >
-                                {(() => {
-                                  const { data, loading } = useGeocode(
-                                    marker.LatLng
-                                  );
-                                  if (loading)
-                                    return <div>Loading address...</div>;                                  if (data) {
-                                    return (
-                                      <>
-                                        <div>Country: {data.country}</div>
-                                        <div>City: {data.city}</div>
-                                        <div
-                                          style={{
-                                            marginTop: "4px",
-                                            color: "#666",
-                                          }}
-                                        >
-                                          Coordinates: {marker.LatLng}
-                                        </div>
-                                      </>
-                                    );
-                                  }
-                                  return (
-                                    <div>Coordinates: {marker.LatLng}</div>
-                                  );
-                                })()}
-                              </div>
-                            </div>
-                          </div>
-                        ) : (
-                          <div>
-                            {(() => {
-                              const { data, loading } = useGeocode(
-                                marker.LatLng
-                              );
-                              if (loading) return <div>Loading address...</div>;
-                              if (data) {
-                                return (
-                                  <>
-                                    <div>Country: {data.country}</div>
-                                    <div>City: {data.city}</div>
-                                    <div
-                                      style={{
-                                        marginTop: "4px",
-                                        color: "#666",
-                                      }}
-                                    >
-                                      Coordinates: {marker.LatLng}
-                                    </div>
-                                  </>
-                                );
-                              }
-                              return <div>Coordinates: {marker.LatLng}</div>;
-                            })()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Additional details */}
-                    {marker.tooltip && (
-                      <div style={{ marginBottom: "12px" }}>
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            color: "#6c757d",
-                            marginBottom: "4px",
-                          }}
-                        >
-                          Tooltip
-                        </div>
-                        <div style={{ fontSize: "14px" }}>
-                          {marker.tooltip.replace(/\\n/g, " ")}
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Address if available */}
-                    {marker.Address && (
-                      <div>
-                        <div
-                          style={{
-                            fontSize: "13px",
-                            color: "#6c757d",
-                            marginBottom: "4px",
-                          }}
-                        >
-                          Address
-                        </div>
-                        <div style={{ fontSize: "14px" }}>
-                          {typeof marker.Address === "string" &&
-                          marker.Address.includes("Address") ? (
-                            <>
-                              <div>Previous: {previousState?.LatLng}</div>
-                              <div>Current: {marker.LatLng}</div>
-                              {(() => {
-                                const { data, loading } = useGeocode(
-                                  marker.LatLng
-                                );
-                                if (loading)
-                                  return <div>Loading address...</div>;
-                                if (data) {
-                                  return (
-                                    <div style={{ marginTop: "8px" }}>
-                                      <div>Country: {data.country}</div>
-                                      <div>City: {data.city}</div>
-                                      <div
-                                        style={{
-                                          marginTop: "4px",
-                                          color: "#666",
-                                        }}
-                                      >
-                                        Coordinates: {marker.LatLng}
-                                      </div>
-                                    </div>
-                                  );
-                                }
-                                return null;
-                              })()}
-                            </>
-                          ) : (
-                            marker.Address
-                          )}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
+            {filteredMarkers.map((marker, index) => (
+              <MarkerCard
+                key={index}
+                marker={marker}
+                previousState={getPreviousMarkerState(marker.Name)}
+              />
+            ))}
           </div>
         )}
 
-        {/* Interconnects View */}
         {dataType === "interconnects" && filteredInterconnects.length > 0 && (
           <div
             style={{
@@ -448,140 +521,12 @@ const DataPreview: React.FC<PopupDataViewProps> = ({
             }}
           >
             {filteredInterconnects.map((interconnect, index) => (
-              <div
-                key={index}
-                style={{
-                  border: "1px solid #e9ecef",
-                  borderRadius: "8px",
-                  overflow: "hidden",
-                  transition: "transform 0.2s, box-shadow 0.2s",
-                  boxShadow: "0 2px 5px rgba(0,0,0,0.1)",
-                }}
-              >
-                <div
-                  style={{
-                    padding: "12px 16px",
-                    backgroundColor: "#f8f9fa",
-                    borderBottom: "1px solid #e9ecef",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <h4
-                    style={{
-                      margin: 0,
-                      fontSize: "16px",
-                      color: "#212529",
-                      fontWeight: "600",
-                    }}
-                  >
-                    {interconnect.Name || `Interconnect ${index + 1}`}
-                  </h4>
-                  {interconnect.Update === "1" && (
-                    <span
-                      style={{
-                        padding: "3px 8px",
-                        borderRadius: "4px",
-                        fontSize: "12px",
-                        fontWeight: "500",
-                        backgroundColor: "#ffc107",
-                        color: "#212529",
-                      }}
-                    >
-                      Modified
-                    </span>
-                  )}
-                </div>
-                <div style={{ padding: "16px" }}>
-                  <div style={{ marginBottom: "12px" }}>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: "#6c757d",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Line Color
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        padding: "6px 10px",
-                        backgroundColor: "#f1f3f5",
-                        borderRadius: "4px",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "8px",
-                      }}
-                    >
-                      <span
-                        style={{
-                          display: "inline-block",
-                          width: "16px",
-                          height: "16px",
-                          backgroundColor: interconnect.LineColor || "#000",
-                          borderRadius: "4px",
-                        }}
-                      ></span>
-                      {interconnect.LineColor || "Default"}
-                    </div>
-                  </div>
-
-                  <div style={{ marginBottom: "12px" }}>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: "#6c757d",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Line Width
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        padding: "6px 10px",
-                        backgroundColor: "#f1f3f5",
-                        borderRadius: "4px",
-                      }}
-                    >
-                      {interconnect.LineWidthpx || "1"}px
-                    </div>
-                  </div>
-
-                  <div>
-                    <div
-                      style={{
-                        fontSize: "13px",
-                        color: "#6c757d",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      Waypoints
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "14px",
-                        padding: "6px 10px",
-                        backgroundColor: "#f1f3f5",
-                        borderRadius: "4px",
-                        fontFamily: "monospace",
-                        maxHeight: "80px",
-                        overflowY: "auto",
-                      }}
-                    >
-                      {interconnect.WaypointLatLngArray || "No waypoints"}
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <InterconnectCard key={index} interconnect={interconnect} />
             ))}
           </div>
         )}
       </div>
 
-      {/* Footer with save button */}
       <div
         style={{
           padding: "16px 20px",
