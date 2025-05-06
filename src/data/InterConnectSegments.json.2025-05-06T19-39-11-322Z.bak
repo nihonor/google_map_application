@@ -11,7 +11,7 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.809610 -88.110977, 41.808863  -88.110845, 41.808745 -88.106650, 41.808090 -88.098786,  41.810470 -88.098253",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Lisle, United States",
@@ -25,7 +25,7 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "42.3191876 -88.9903466",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Lisle, United States",
@@ -39,7 +39,7 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.809610 -88.110977, 41.808863  -88.110845, 41.808745 -88.106650, 41.808090 -88.098786,  41.8074315 -88.0752428",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Council Bluffs, United States",
@@ -53,7 +53,7 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.281335 -95.786084,41.496403 -95.584174,41.499189 -95.323804,41.666832 -93.500347,41.686033 -91.623322,41.593275 -90.362548,41.762241 -89.841207,41.824729 -89.302068,41.904625-89.0282989,41.900548 -88.649474,41.875851 -88.614087,41.796344 -88.396238,41.804037 -88.203495,41.806278 -88.138856,41.806278 -88.083971,41.8074315 -88.0752428",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Springfield, United States",
@@ -67,7 +67,7 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.8074315 -88.0752428",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "England, United Kingdom",
@@ -81,7 +81,7 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "51.508431 -0.204722",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Scotland, United Kingdom",
@@ -95,7 +95,7 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "50.895692 4.3376882",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Kostanay Region, Kazakhstan",
@@ -109,7 +109,7 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "50.458433 30.476319",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Anchorage, United States",
@@ -123,7 +123,7 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "35.6998313 139.7388709",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Shinjuku City, Japan",
@@ -137,7 +137,7 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "-33.8883996 151.1841899",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Camperdown, Australia",
@@ -151,7 +151,7 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "28.6362567 77.1046916",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Kostanay Region, Kazakhstan",
@@ -165,11 +165,11 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "61.1910447 -149.8221347",
-    "Update": "1"
+    "Update": "0"
   },
   {
     "Source": "Anchorage, United States",
-    "Target": ", ",
+    "Target": "Haidong, China",
     "Name": "Anchorage",
     "Desc": "Anchorage to Tokyo Connection",
     "LineType": "Solid",
@@ -182,7 +182,7 @@
     "Update": "1"
   },
   {
-    "Source": ", ",
+    "Source": "Haidong, China",
     "Target": "Camperdown, Australia",
     "Name": "Tokyo",
     "Desc": "Tokyo to Sydney Connection",

@@ -8,85 +8,91 @@ export async function POST(request: NextRequest) {
     const { markers, interconnects } = await request.json();
     console.log('Received data:', { markers, interconnects });
 
+    if (!markers || !interconnects) {
+      throw new Error('Invalid data: markers and interconnects are required');
+    }
+
     // Paths to JSON files
     const markersFilePath = path.join(process.cwd(), 'src', 'data', 'SiteMarkers.json');
     const interconnectsFilePath = path.join(process.cwd(), 'src', 'data', 'InterConnectSegments.json');
-    console.log('File paths:', { markersFilePath, interconnectsFilePath });
+    
+    // Create backup of existing files
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const markersBackupPath = `${markersFilePath}.${timestamp}.bak`;
+    const interconnectsBackupPath = `${interconnectsFilePath}.${timestamp}.bak`;
+    
+    try {
+      await fs.copyFile(markersFilePath, markersBackupPath);
+      await fs.copyFile(interconnectsFilePath, interconnectsBackupPath);
+      console.log('Created backup files:', { markersBackupPath, interconnectsBackupPath });
+    } catch (backupError) {
+      console.warn('Failed to create backup files:', backupError);
+    }
 
-    // Read existing data
-    const existingMarkers = JSON.parse(await fs.readFile(markersFilePath, 'utf8'));
-    const existingInterconnects = JSON.parse(await fs.readFile(interconnectsFilePath, 'utf8'));
-    console.log('Existing data:', { 
-      existingMarkersCount: existingMarkers.length, 
-      existingInterconnectsCount: existingInterconnects.length 
-    });
+    // Prepare the data for saving
+    const finalMarkers = markers.map((marker: any) => ({
+      ...marker,
+      Update: "1"
+    }));
 
-    // Create maps for quick lookup
-    const existingMarkersMap = new Map();
-    const existingInterconnectsMap = new Map(
-      existingInterconnects.map((ic: any) => [`${ic.Source}__${ic.Target}`, ic])
-    );
+    const finalInterconnects = interconnects.map((interconnect: any) => ({
+      ...interconnect,
+      Update: "1"
+    }));
 
-    // Update or add new markers
-    markers.forEach((marker: any) => {
-      if (marker.Name) {
-        existingMarkersMap.set(marker.Name, marker);
+    // Write the files
+    try {
+      // Write markers
+      await fs.writeFile(
+        markersFilePath,
+        JSON.stringify(finalMarkers, null, 2),
+        { encoding: 'utf8', flag: 'w' }
+      );
+
+      // Write interconnects
+      await fs.writeFile(
+        interconnectsFilePath,
+        JSON.stringify(finalInterconnects, null, 2),
+        { encoding: 'utf8', flag: 'w' }
+      );
+
+      // Verify the writes
+      const verifyMarkers = JSON.parse(await fs.readFile(markersFilePath, 'utf8'));
+      const verifyInterconnects = JSON.parse(await fs.readFile(interconnectsFilePath, 'utf8'));
+
+      if (verifyMarkers.length !== finalMarkers.length || 
+          verifyInterconnects.length !== finalInterconnects.length) {
+        throw new Error('Verification failed: File content mismatch after save');
       }
-    });
 
-    // Update or add new interconnects
-    interconnects.forEach((interconnect: any) => {
-      if (interconnect.Source && interconnect.Target) {
-        existingInterconnectsMap.set(`${interconnect.Source}__${interconnect.Target}`, interconnect);
+      console.log('Files written and verified successfully');
+
+      return NextResponse.json({
+        message: 'Data saved successfully',
+        markers: finalMarkers,
+        interconnects: finalInterconnects
+      }, { status: 200 });
+
+    } catch (writeError) {
+      console.error('Error writing files:', writeError);
+      
+      // Try to restore from backup if write failed
+      try {
+        await fs.copyFile(markersBackupPath, markersFilePath);
+        await fs.copyFile(interconnectsBackupPath, interconnectsFilePath);
+        console.log('Restored from backup files after write failure');
+      } catch (restoreError) {
+        console.error('Failed to restore from backup:', restoreError);
       }
-    });
 
-    // Convert maps back to arrays
-    const finalMarkers = Array.from(existingMarkersMap.values());
-    const finalInterconnects = Array.from(existingInterconnectsMap.values());
+      throw writeError;
+    }
 
-    console.log('Final data:', { 
-      markersCount: finalMarkers.length, 
-      interconnectsCount: finalInterconnects.length 
-    });
-
-    // Write markers to SiteMarkers.json
-    console.log('Writing markers to file...');
-    await fs.writeFile(markersFilePath, JSON.stringify(finalMarkers, null, 2), 'utf8');
-    console.log('Markers file written successfully');
-
-    // Write interconnects to InterConnectSegments.json
-    console.log('Writing interconnects to file...');
-    await fs.writeFile(interconnectsFilePath, JSON.stringify(finalInterconnects, null, 2), 'utf8');
-    console.log('Interconnects file written successfully');
-
-    // Verify the files were written correctly
-    const verifyMarkers = JSON.parse(await fs.readFile(markersFilePath, 'utf8'));
-    const verifyInterconnects = JSON.parse(await fs.readFile(interconnectsFilePath, 'utf8'));
-    console.log('Verification:', {
-      markersFileSize: verifyMarkers.length,
-      interconnectsFileSize: verifyInterconnects.length
-    });
-
-    // Return success response with updated data
-    return NextResponse.json({ 
-      message: 'Data saved successfully',
-      markers: finalMarkers,
-      interconnects: finalInterconnects
-    }, { status: 200 });
   } catch (error) {
-    // Log the error
-    console.error('Error saving map data:', error);
-    console.error('Error details:', {
-      name: error instanceof Error ? error.name : 'Unknown',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
-    });
-
-    // Return error response
-    return NextResponse.json({ 
-      message: 'Error saving map data', 
-      error: error instanceof Error ? error.message : 'Unknown error' 
+    console.error('Error in save operation:', error);
+    return NextResponse.json({
+      message: 'Failed to save data',
+      error: error instanceof Error ? error.message : 'Unknown error'
     }, { status: 500 });
   }
 }

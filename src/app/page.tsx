@@ -83,13 +83,12 @@ export default function Home() {
       setMarkers(responseData.markers);
       setInterconnects(responseData.interconnects);
       console.log("Local state updated with new data");
+
+      // Force reload the page to get fresh data
+      window.location.reload();
     } catch (error) {
-      console.error("Error saving changes:", error);
-      alert(
-        `Failed to save changes: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
-      );
+      console.error("Error saving data:", error);
+      alert("Failed to save data. Please try again.");
     }
   };
 

@@ -51,7 +51,7 @@
     "Name": ", ",
     "Selected": "0",
     "Update": "1",
-    "LatLng": "42.769325992394066, 100.36387089999998",
+    "LatLng": "48.70810188697077, 64.4484416",
     "Address": "{Address: \"\"\"\", City: \"\"New Delhi\"\", State: \"\"Delhi\"\", ZIP: \"\"110007\"\", Country: \"\"India\"\"}  ",
     "iconSVGfile": "myicon.svg",
     "AlertStatus": "0",
@@ -105,6 +105,18 @@
     "AlertStatus": "0",
     "tooltip": "This is Springfield, IL tooltip line1\\nThis is Tooltip line4",
     "Details": "This is Springfield Details line1\\nThis is Details line2\\This is Details line3\\nThis is Details line6",
+    "": ""
+  },
+  {
+    "Name": "Haidong, China",
+    "Selected": "0",
+    "Update": "1",
+    "LatLng": "36.26877975773157, 101.7701209",
+    "Address": "{\"\"Address\"\":\"\"7Q9C+G2 Xiongxian Town\"\",\"\"City\"\":\"\"Haidong\"\",\"\"State\"\":\"\"Qinghai\"\",\"\"ZIP\"\":\"\"811604\"\",\"\"Country\"\":\"\"China\"\"}",
+    "iconSVGfile": "myicon.svg",
+    "AlertStatus": "0",
+    "tooltip": "This is Haidong tooltip line1\\nLocation: 7Q9C+G2 Xiongxian Town\\nChina",
+    "Details": "This is Haidong Details line1\\nAddress: 7Q9C+G2 Xiongxian Town\\nCity: Haidong\\nCountry: China",
     "": ""
   }
 ]

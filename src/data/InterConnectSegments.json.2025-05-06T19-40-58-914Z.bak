@@ -169,7 +169,7 @@
   },
   {
     "Source": "Anchorage, United States",
-    "Target": ", ",
+    "Target": "Bayingolin Mongol Autonomous Prefecture, China",
     "Name": "Anchorage",
     "Desc": "Anchorage to Tokyo Connection",
     "LineType": "Solid",
@@ -182,7 +182,7 @@
     "Update": "1"
   },
   {
-    "Source": ", ",
+    "Source": "Bayingolin Mongol Autonomous Prefecture, China",
     "Target": "Camperdown, Australia",
     "Name": "Tokyo",
     "Desc": "Tokyo to Sydney Connection",
