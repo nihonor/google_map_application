@@ -38,17 +38,76 @@ export const parseLatLng = (latLng: string): google.maps.LatLngLiteral | null =>
   return isNaN(lat) || isNaN(lng) ? null : { lat, lng };
 };
 
+export interface AddressComponents {
+  country: string;
+  city: string;
+}
 
-export async function reverseGeocode({ lat, lng }: { lat: number; lng: number }): Promise<string> {
-  const geocoder = new google.maps.Geocoder();
-  return new Promise((resolve, reject) => {
-    geocoder.geocode({ location: { lat, lng } }, (results, status) => {
-      if (status === 'OK' && results && results[0]) {
-        resolve(results[0].formatted_address);
-      } else {
-        reject(`Geocode was not successful for the following reason: ${status}`);
-      }
+export async function reverseGeocode({ lat, lng }: { lat: number; lng: number }): Promise<AddressComponents> {
+  console.log('Starting reverseGeocode with coordinates:', { lat, lng });
+  
+  try {
+    const google = await loader.load();
+    console.log('Google Maps API loaded successfully');
+    
+    const geocoder = new google.maps.Geocoder();
+    console.log('Geocoder instance created');
+    
+    return new Promise((resolve, reject) => {
+      geocoder.geocode({ location: { lat, lng } }, (results, status) => {
+        console.log('Geocoding response status:', status);
+        
+        if (status === 'OK' && results && results.length > 0) {
+          // Find the result with the most detailed address information
+          const bestResult = results.find(result => 
+            result.address_components.some(component => 
+              component.types.includes('locality') || 
+              component.types.includes('administrative_area_level_1')
+            )
+          ) || results[0];
+
+          const addressComponents = bestResult.address_components;
+          console.log('Using address components:', JSON.stringify(addressComponents, null, 2));
+          
+          const components: AddressComponents = {
+            country: 'Unknown',
+            city: 'Unknown'
+          };
+
+          for (const component of addressComponents) {
+            console.log('Processing component:', JSON.stringify(component, null, 2));
+            if (component.types.includes('country')) {
+              components.country = component.long_name;
+              console.log('Found country:', component.long_name);
+            }
+            if (component.types.includes('locality')) {
+              components.city = component.long_name;
+              console.log('Found city:', component.long_name);
+            }
+          }
+
+          // If we don't have a city but have an administrative area, use that
+          if (components.city === 'Unknown') {
+            const adminArea = addressComponents.find(component => 
+              component.types.includes('administrative_area_level_1')
+            );
+            if (adminArea) {
+              components.city = adminArea.long_name;
+              console.log('Using administrative area as city:', adminArea.long_name);
+            }
+          }
+
+          console.log('Final address components:', JSON.stringify(components, null, 2));
+          resolve(components);
+        } else {
+          console.error('Geocoding failed:', status);
+          reject(`Geocode was not successful for the following reason: ${status}`);
+        }
+      });
     });
-  });
+  } catch (error) {
+    console.error('Error in reverseGeocode:', error);
+    throw error;
+  }
 }
 
