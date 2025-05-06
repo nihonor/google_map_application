@@ -9,6 +9,13 @@ import {
 import { SiteMarker, InterConnectSegment, Address } from "@/types";
 import html2canvas from "html2canvas";
 import DataPreview from "./DataPreview";
+import {
+  GoogleMap as GoogleMapComponent,
+  LoadScript,
+  Marker,
+  InfoWindow,
+  Polyline,
+} from "@react-google-maps/api";
 
 interface Props {
   markers: SiteMarker[];
@@ -27,6 +34,59 @@ interface Props {
   ) => void;
 }
 
+interface AddressInfo {
+  city?: string;
+  state?: string;
+  country?: string;
+  street?: string;
+  postalCode?: string;
+}
+
+const getAddressFromCoordinates = async ({
+  lat,
+  lng,
+}: {
+  lat: number;
+  lng: number;
+}): Promise<AddressInfo> => {
+  try {
+    const google = await loader.load();
+    const geocoder = new google.maps.Geocoder();
+
+    const response = await geocoder.geocode({
+      location: { lat, lng },
+    });
+
+    if (!response.results?.[0]) {
+      throw new Error("No results found");
+    }
+
+    const addressInfo: AddressInfo = {};
+    const result = response.results[0];
+
+    // Extract address components
+    result.address_components.forEach((component: any) => {
+      const types = component.types;
+      if (types.includes("locality")) {
+        addressInfo.city = component.long_name;
+      } else if (types.includes("administrative_area_level_1")) {
+        addressInfo.state = component.long_name;
+      } else if (types.includes("country")) {
+        addressInfo.country = component.long_name;
+      } else if (types.includes("route")) {
+        addressInfo.street = component.long_name;
+      } else if (types.includes("postal_code")) {
+        addressInfo.postalCode = component.long_name;
+      }
+    });
+
+    return addressInfo;
+  } catch (error) {
+    console.error("Error in reverse geocoding:", error);
+    return {};
+  }
+};
+
 export default function GoogleMap({
   markers,
   interconnects,
@@ -37,6 +97,8 @@ export default function GoogleMap({
   fnSave,
 }: Props) {
   const mapRef = useRef<HTMLDivElement>(null);
+  // const mapInstance = useRef<google.maps.Map | null>(null);
+  // const [isMapLoaded, setIsMapLoaded] = useState(false);
   const [map, setMap] = useState<google.maps.Map | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [updatedMarkers, setUpdatedMarkers] = useState<SiteMarker[]>([
@@ -68,11 +130,27 @@ export default function GoogleMap({
 
       const google = await loader.load();
 
+      // Clear any existing map instance
+      if (map) {
+        // Remove all overlays and listeners
+        google.maps.event.clearInstanceListeners(map);
+      }
+
       const newMap = new google.maps.Map(mapRef.current, {
         zoom: 4,
+        center: { lat: 20, lng: 0 },
         mapTypeControl: true,
         streetViewControl: true,
         fullscreenControl: true,
+        restriction: {
+          latLngBounds: {
+            north: 85,
+            south: -85,
+            west: -180,
+            east: 180,
+          },
+          strictBounds: true,
+        },
         styles: [
           {
             featureType: "poi",
@@ -84,35 +162,63 @@ export default function GoogleMap({
       });
 
       setMap(newMap);
+
+      // Clear any existing info windows
+      if (infoWindowRef.current) {
+        infoWindowRef.current.close();
+      }
       infoWindowRef.current = new google.maps.InfoWindow();
 
       // Set initial bounds based on markers
-      const bounds = new google.maps.LatLngBounds();
-      let hasValidMarkers = false;
+      if (markers.length > 0) {
+        const bounds = new google.maps.LatLngBounds();
+        let hasValidMarkers = false;
 
-      markers.forEach((marker) => {
-        const position = parseLatLng(marker.LatLng);
-        if (position) {
-          bounds.extend(position);
-          hasValidMarkers = true;
+        markers.forEach((marker) => {
+          const position = parseLatLng(marker.LatLng);
+          if (position) {
+            bounds.extend(position);
+            hasValidMarkers = true;
+          }
+        });
+
+        if (hasValidMarkers) {
+          newMap.fitBounds(bounds);
+          // Add some padding to the bounds
+          const padding = {
+            top: 50,
+            right: 50,
+            bottom: 50,
+            left: 50,
+          };
+          newMap.panToBounds(bounds, padding);
         }
-      });
-
-      if (hasValidMarkers) {
-        newMap.fitBounds(bounds);
-        // Add some padding to the bounds
-        const padding = {
-          top: 50,
-          right: 50,
-          bottom: 50,
-          left: 50,
-        };
-        newMap.panToBounds(bounds, padding);
       }
     };
 
+    // Call initMap
     initMap();
-  }, [markers]);
+
+    // Cleanup function
+    return () => {
+      // Clear all markers
+      markersRef.current.forEach((marker) => {
+        marker.map = null;
+      });
+      markersRef.current.clear();
+
+      // Clear all polylines
+      polylinesRef.current.forEach((polyline) => {
+        polyline.setMap(null);
+      });
+      polylinesRef.current.clear();
+
+      // Clear info window
+      if (infoWindowRef.current) {
+        infoWindowRef.current.close();
+      }
+    };
+  }, []); // Empty dependency array since we only want this to run once on mount
 
   // Update local state when props change
   useEffect(() => {
@@ -192,60 +298,10 @@ export default function GoogleMap({
   useEffect(() => {
     if (!map) return;
 
-    // Reset processed markers collection
+    const google = window.google;
+    if (!google) return;
+
     processedMarkersRef.current = [];
-
-    // This is the click event for the map
-    const clickListener = map.addListener(
-      "click",
-      async (event: google.maps.MapMouseEvent) => {
-        const lat = event.latLng!.lat();
-        const lng = event.latLng!.lng();
-
-        // Fetch address using reverse geocoding
-        const address = await reverseGeocode({ lat, lng });
-
-        // Tooltip content
-        const content = `
-          <div style="font-family: Arial, sans-serif;">
-              <strong style="color: blue;">Latitude:</strong> <span style="font-weight: bold; color: green;">${lat}</span><br>
-              <strong style="color: blue;">Longitude:</strong> <span style="font-weight: bold; color: green;">${lng}</span><br>
-              <strong style="color: blue;">Address:</strong> <span style="font-weight: bold; color: purple;">${address}</span>
-          </div>
-      `;
-
-        // Show InfoWindow at clicked position
-        infoWindowRef.current?.setContent(content);
-        infoWindowRef.current?.setPosition(event.latLng);
-        infoWindowRef.current?.open(map);
-      }
-    );
-
-    // this is to handle mouse over
-    const mouseoverListener = map.addListener(
-      "mouseover",
-      async (event: google.maps.MapMouseEvent) => {
-        const lat = event.latLng!.lat();
-        const lng = event.latLng!.lng();
-
-        // Fetch address using reverse geocoding
-        const address = await reverseGeocode({ lat, lng });
-
-        // Tooltip content
-        const content = `
-          <div style="font-family: Arial, sans-serif;">
-              <strong style="color: blue;">Latitude:</strong> <span style="font-weight: bold; color: green;">${lat}</span><br>
-              <strong style="color: blue;">Longitude:</strong> <span style="font-weight: bold; color: green;">${lng}</span><br>
-              <strong style="color: blue;">Address:</strong> <span style="font-weight: bold; color: purple;">${address}</span>
-          </div>
-      `;
-
-        // Show InfoWindow at clicked position
-        infoWindowRef.current?.setContent(content);
-        infoWindowRef.current?.setPosition(event.latLng);
-        infoWindowRef.current?.open(map);
-      }
-    );
 
     // Remove existing markers
     markersRef.current.forEach((marker) => {
@@ -262,21 +318,11 @@ export default function GoogleMap({
         const updatedMarker = { ...marker };
 
         if (!position) {
-          console.log("Position is not there");
           try {
-            // Clean and fix the Address string
             let cleanedAddress = marker.Address.replace(/\"\"/g, '"').trim();
-
-            // Add double quotes around property names
             cleanedAddress = cleanedAddress.replace(/(\w+):/g, '"$1":');
-            // Parse the cleaned string
             const address = JSON.parse(cleanedAddress) as Address;
             position = await getLatLngFromAddress(address);
-            console.log("Parsed Address: ", address);
-            console.log(
-              "The positions for the non-positioned records: ",
-              position
-            );
 
             if (position) {
               updatedMarker.LatLng = `${position.lat}, ${position.lng}`;
@@ -299,57 +345,115 @@ export default function GoogleMap({
             gmpClickable: true,
           });
 
-          mapMarker.addListener("mouseout", () => {
-            infoWindowRef.current?.close();
-          });
+          // Store click listener reference so we can remove it later
+          let clickListener: google.maps.MapsEventListener | null = null;
+          let mouseoutListener: google.maps.MapsEventListener | null = null;
+          let mouseoverListener: google.maps.MapsEventListener | null = null;
 
-          mapMarker.addListener("mouseover", () => {
-            // Format content with Name on first line and Tooltip on second line
-            const content = `
-              <div style="font-family: Arial, sans-serif;">
-                <strong>${marker.Name}</strong><br>
-                ${marker.tooltip ? marker.tooltip.replace(/\\n/g, "<br>") : ""}
-              </div>
-            `;
-            infoWindowRef.current?.setContent(content);
-            infoWindowRef.current?.open(map, mapMarker);
-          });
+          // Remove existing listeners if they exist
+          const removeExistingListeners = () => {
+            if (clickListener) google.maps.event.removeListener(clickListener);
+            if (mouseoutListener)
+              google.maps.event.removeListener(mouseoutListener);
+            if (mouseoverListener)
+              google.maps.event.removeListener(mouseoverListener);
+          };
 
-          mapMarker.addListener("click", () => {
-            const content = `
-              <div style="font-family: Arial, sans-serif;">
-                <strong>${marker.Name}</strong><br>
-                ${marker.Details ? marker.Details.replace(/\\n/g, "<br>") : ""}
-              </div>
-            `;
-            infoWindowRef.current?.setContent(content);
-            infoWindowRef.current?.open(map, mapMarker);
-          });
+          // Add new listeners
+          const addMarkerListeners = () => {
+            removeExistingListeners();
 
-          if (editMode) {
-            // Handle click on marker event in edit mode
-            mapMarker.addListener("click", () => {
-              // Combine Address and LatLng with proper formatting
+            mouseoutListener = mapMarker.addListener("mouseout", () => {
+              infoWindowRef.current?.close();
+            });
+
+            mouseoverListener = mapMarker.addListener("mouseover", async () => {
+              const position = mapMarker.position;
+              if (!position) return;
+
+              const lat =
+                typeof position.lat === "function"
+                  ? position.lat()
+                  : position.lat;
+              const lng =
+                typeof position.lng === "function"
+                  ? position.lng()
+                  : position.lng;
+
+              // Get fresh address information for current position
+              const addressInfo = await getAddressFromCoordinates({ lat, lng });
+
+              // Create location string with only available components
+              const locationParts = [];
+              if (addressInfo.street) locationParts.push(addressInfo.street);
+              if (addressInfo.city) locationParts.push(addressInfo.city);
+              if (addressInfo.state) locationParts.push(addressInfo.state);
+              if (addressInfo.country) locationParts.push(addressInfo.country);
+
+              const locationString = locationParts.join(", ");
+
               const content = `
-                  <div style="font-family: Arial, sans-serif;">
-                      <strong style="color: blue;">Address:</strong> <br>
-                      <span style="font-weight: bold; color:red">
-                      ${marker.Address.replace(/\\n/g, "<br>")}
-                      </span>
-                      <br><br>
-                      <span style="font-weight: bold; color:red">
-                      <strong style="color: blue;">Coordinates:</strong> <br>
-                      ${marker.LatLng.replace(/\\n/g, "<br>")}
-                      </span>
-                  </div>
+                <div style="font-family: Arial, sans-serif;">
+                  <strong>${locationString}</strong><br>
+                  ${
+                    marker.tooltip ? marker.tooltip.replace(/\\n/g, "<br>") : ""
+                  }
+                  <br>
+                  <span style="color: #666;">Coordinates: ${lat.toFixed(
+                    6
+                  )}, ${lng.toFixed(6)}</span>
+                </div>
               `;
-
-              // Set the combined content
               infoWindowRef.current?.setContent(content);
               infoWindowRef.current?.open(map, mapMarker);
             });
 
-            // This is to handle the dragend
+            clickListener = mapMarker.addListener("click", async () => {
+              const position = mapMarker.position;
+              if (!position) return;
+
+              const lat =
+                typeof position.lat === "function"
+                  ? position.lat()
+                  : position.lat;
+              const lng =
+                typeof position.lng === "function"
+                  ? position.lng()
+                  : position.lng;
+
+              // Get fresh address information for current position
+              const addressInfo = await reverseGeocode({ lat, lng });
+
+              // Create location string with only available components
+              const locationParts = [];
+              if (addressInfo.city) locationParts.push(addressInfo.city);
+              if (addressInfo.state) locationParts.push(addressInfo.state);
+              if (addressInfo.country) locationParts.push(addressInfo.country);
+
+              const locationString = locationParts.join(", ");
+
+              // Format the content
+              const content = `
+                <div style="font-family: Arial, sans-serif;">
+                  <strong>Location:</strong><br>
+                  <span style="color: red">${locationString}</span>
+                  <br><br>
+                  <strong>Coordinates:</strong><br>
+                  <span style="color: red">${lat}, ${lng}</span>
+                </div>
+              `;
+
+              // Set the content
+              infoWindowRef.current?.setContent(content);
+              infoWindowRef.current?.open(map, mapMarker);
+            });
+          };
+
+          // Initial addition of listeners
+          addMarkerListeners();
+
+          if (editMode) {
+            // Handle drag events
             mapMarker.addListener(
               "dragend",
               async (event: google.maps.MapMouseEvent) => {
@@ -358,7 +462,7 @@ export default function GoogleMap({
                   const newLng = event.latLng.lng();
 
                   // Get detailed address information for the new location
-                  const addressInfo = await reverseGeocode({
+                  const addressInfo = await getAddressFromCoordinates({
                     lat: newLat,
                     lng: newLng,
                   });
@@ -387,13 +491,8 @@ export default function GoogleMap({
                     addressInfo.country
                   }`;
 
-                  console.log("Marker dragged:", marker.Name);
-                  console.log("New position:", { lat: newLat, lng: newLng });
-                  console.log("New name:", newName);
-
                   // Store the previous state if not already stored
                   if (!previousMarkerStates.has(marker.Name)) {
-                    console.log("Storing previous state for:", marker.Name);
                     setPreviousMarkerStates((prev) => {
                       const newMap = new Map(prev);
                       newMap.set(marker.Name, { ...marker });
@@ -431,32 +530,75 @@ export default function GoogleMap({
                   // Update the marker reference with new name and tooltip
                   const currentMarker = markersRef.current.get(marker.Name);
                   if (currentMarker) {
+                    // Remove all existing listeners from the marker
+                    google.maps.event.clearInstanceListeners(currentMarker);
+
+                    // Update the marker's title
                     currentMarker.title = newName;
 
-                    // Update the mouseover event listener with new tooltip
-                    currentMarker.addListener("mouseover", () => {
+                    // Add new event listeners
+                    currentMarker.addListener("mouseout", () => {
+                      infoWindowRef.current?.close();
+                    });
+
+                    currentMarker.addListener("mouseover", async () => {
+                      const position = currentMarker.position;
+                      if (!position) return;
+
+                      const lat =
+                        typeof position.lat === "function"
+                          ? position.lat()
+                          : position.lat;
+                      const lng =
+                        typeof position.lng === "function"
+                          ? position.lng()
+                          : position.lng;
+
+                      // Get fresh address information for current position
+                      const addressInfo = await getAddressFromCoordinates({
+                        lat,
+                        lng,
+                      });
+
+                      // Create location string with only available components
+                      const locationParts = [];
+                      if (addressInfo.street)
+                        locationParts.push(addressInfo.street);
+                      if (addressInfo.city)
+                        locationParts.push(addressInfo.city);
+                      if (addressInfo.state)
+                        locationParts.push(addressInfo.state);
+                      if (addressInfo.country)
+                        locationParts.push(addressInfo.country);
+
+                      const locationString = locationParts.join(", ");
+
                       const content = `
-                        <div style="font-family: Arial, sans-serif;">
-                          <strong>${newName}</strong><br>
-                          ${newTooltip.replace(/\\n/g, "<br>")}
-                        </div>
-                      `;
+                      <div style="font-family: Arial, sans-serif;">
+                        <strong>${locationString}</strong><br>
+                        ${newTooltip.replace(/\\n/g, "<br>")}
+                        <br>
+                        <span style="color: #666;">Coordinates: ${lat.toFixed(
+                          6
+                        )}, ${lng.toFixed(6)}</span>
+                      </div>
+                    `;
                       infoWindowRef.current?.setContent(content);
                       infoWindowRef.current?.open(map, currentMarker);
                     });
 
-                    // Update the click event listener with new details
                     currentMarker.addListener("click", () => {
                       const content = `
-                        <div style="font-family: Arial, sans-serif;">
-                          <strong>${newName}</strong><br>
-                          ${newDetails.replace(/\\n/g, "<br>")}
-                        </div>
-                      `;
+                      <div style="font-family: Arial, sans-serif;">
+                        <strong>${newName}</strong><br>
+                        ${newDetails.replace(/\\n/g, "<br>")}
+                      </div>
+                    `;
                       infoWindowRef.current?.setContent(content);
                       infoWindowRef.current?.open(map, currentMarker);
                     });
 
+                    // Update marker reference in the map
                     markersRef.current.delete(marker.Name);
                     markersRef.current.set(newName, currentMarker);
                   }
@@ -468,11 +610,9 @@ export default function GoogleMap({
           markersRef.current.set(marker.Name, mapMarker);
         }
 
-        // Add the processed marker to our temp array
         tempMarkers.push(updatedMarker);
       }
 
-      // Update the state with all processed markers
       setUpdatedMarkers(tempMarkers);
       processedMarkersRef.current = tempMarkers;
     };
@@ -495,13 +635,7 @@ export default function GoogleMap({
         map.setZoom(12);
       }
     }
-
-    // Clean up listeners on component unmount
-    return () => {
-      google.maps.event.removeListener(clickListener);
-      google.maps.event.removeListener(mouseoverListener);
-    };
-  }, [map, markers, editMode]);
+  }, [markers, editMode]);
 
   // Draw InterConnect paths
   useEffect(() => {
@@ -838,7 +972,7 @@ export default function GoogleMap({
           SAVE
         </button>
       )}
-      <div ref={mapRef} style={{ width: "100%", height: "800px" }} />
+      <div ref={mapRef} style={{ width: "10 0%", height: "800px" }} />
     </div>
   );
 }

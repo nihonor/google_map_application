@@ -7,11 +7,11 @@ export interface Address {
 }
 
 export interface AddressComponents {
+  street: string;
   city: string;
+  state: string;
+  postalCode: string;
   country: string;
-  street?: string;
-  state?: string;
-  postalCode?: string;
 }
 
 // this is sitemaker interface
