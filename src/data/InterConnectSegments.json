@@ -1,7 +1,7 @@
 [
   {
-    "Source": "Lisle, United States",
-    "Target": "Lisle, United States",
+    "Source": "Lisle-3030",
+    "Target": "Lisle-2300",
     "Name": "Lisle-3030",
     "Desc": "Lisle 3030 to 2300",
     "LineType": "Dash",
@@ -11,11 +11,11 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.809610 -88.110977, 41.808863  -88.110845, 41.808745 -88.106650, 41.808090 -88.098786,  41.810470 -88.098253",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Lisle, United States",
-    "Target": "Loves Park, United States",
+    "Source": "Lisle-3030",
+    "Target": "LovesPark, IL - DR",
     "Name": "Lisle-3030",
     "Desc": "Lisle 3030 to LovesPark",
     "LineType": "Solid",
@@ -25,13 +25,13 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "42.3191876 -88.9903466",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Lisle, United States",
-    "Target": "Springfield, United States",
+    "Source": "Lisle-3030",
+    "Target": "Lisle-1011 Midwest backup",
     "Name": "Lisle-3030",
-    "Desc": "Lisle 3030 to Springfield",
+    "Desc": "Lisle 3030 to 1011",
     "LineType": "Dash",
     "LineWidthpx": "3",
     "LineColor": "Gray",
@@ -39,13 +39,13 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.809610 -88.110977, 41.808863  -88.110845, 41.808745 -88.106650, 41.808090 -88.098786,  41.8074315 -88.0752428",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Council Bluffs, United States",
-    "Target": "Springfield, United States",
+    "Source": "IOWA",
+    "Target": "Lisle-1011 Midwest backup",
     "Name": "IOWA",
-    "Desc": "Council Bluffs to Springfield Connection",
+    "Desc": "IOWA Site to 1011",
     "LineType": "Dash",
     "LineWidthpx": "3",
     "LineColor": "Blue",
@@ -53,13 +53,13 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.281335 -95.786084,41.496403 -95.584174,41.499189 -95.323804,41.666832 -93.500347,41.686033 -91.623322,41.593275 -90.362548,41.762241 -89.841207,41.824729 -89.302068,41.904625-89.0282989,41.900548 -88.649474,41.875851 -88.614087,41.796344 -88.396238,41.804037 -88.203495,41.806278 -88.138856,41.806278 -88.083971,41.8074315 -88.0752428",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Springfield, United States",
-    "Target": "Springfield, United States",
+    "Source": "Springfield, IL",
+    "Target": "Lisle-1011 Midwest backup",
     "Name": "Springfield, IL",
-    "Desc": "Springfield Self Connection",
+    "Desc": "Springfield, IL State Site to 1011",
     "LineType": "Dash",
     "LineWidthpx": "2",
     "LineColor": "Red",
@@ -67,13 +67,13 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "41.8074315 -88.0752428",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "England, United Kingdom",
-    "Target": "England, United Kingdom",
+    "Source": "Blanford, London",
+    "Target": "Blanford, London",
     "Name": "Ebury, London",
-    "Desc": "London Self Connection",
+    "Desc": "Ebury, London Site",
     "LineType": "Dash",
     "LineWidthpx": "2",
     "LineColor": "Red",
@@ -81,13 +81,13 @@
     "LineStyle": "0",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "51.508431 -0.204722",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Scotland, United Kingdom",
-    "Target": "Bruxelles, Belgium",
+    "Source": "Glasgow",
+    "Target": "Atomic-Brussels",
     "Name": "Glasgow",
-    "Desc": "Glasgow to Brussels Connection",
+    "Desc": "Glasgow to Brussels",
     "LineType": "Solid",
     "LineWidthpx": "3",
     "LineColor": "Blue",
@@ -95,13 +95,13 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "50.895692 4.3376882",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Kostanay Region, Kazakhstan",
-    "Target": "Kostanay Region, Kazakhstan",
+    "Source": "New Delhi",
+    "Target": "New Delhi",
     "Name": "Poland",
-    "Desc": "Kazakhstan Self Connection",
+    "Desc": "Poland Site",
     "LineType": "Solid",
     "LineWidthpx": "3",
     "LineColor": "Blue",
@@ -109,13 +109,13 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "50.458433 30.476319",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Anchorage, United States",
-    "Target": "Shinjuku City, Japan",
+    "Source": "Anchorage",
+    "Target": "Tokyo",
     "Name": "Anchorage",
-    "Desc": "Anchorage to Tokyo Connection",
+    "Desc": "Anchorage to Tokyo",
     "LineType": "Solid",
     "LineWidthpx": "3",
     "LineColor": "Orange",
@@ -123,13 +123,13 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "35.6998313 139.7388709",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Shinjuku City, Japan",
-    "Target": "Camperdown, Australia",
+    "Source": "Tokyo",
+    "Target": "Sydney",
     "Name": "Tokyo",
-    "Desc": "Tokyo to Sydney Connection",
+    "Desc": "Tokyo to Sydney",
     "LineType": "Solid",
     "LineWidthpx": "2",
     "LineColor": "Orange",
@@ -137,13 +137,13 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "-33.8883996 151.1841899",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Camperdown, Australia",
-    "Target": "Kostanay Region, Kazakhstan",
+    "Source": "Sydney",
+    "Target": "New Delhi",
     "Name": "Sydney",
-    "Desc": "Sydney to Delhi Connection",
+    "Desc": "Sydney to Delhi",
     "LineType": "Solid",
     "LineWidthpx": "3",
     "LineColor": "Orange",
@@ -151,13 +151,13 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "28.6362567 77.1046916",
-    "Update": "1"
+    "Update": "0"
   },
   {
-    "Source": "Kostanay Region, Kazakhstan",
-    "Target": "Anchorage, United States",
+    "Source": "New Delhi",
+    "Target": "Anchorage",
     "Name": "New Delhi",
-    "Desc": "Delhi to Anchorage Connection",
+    "Desc": "Delhi to Anchorage",
     "LineType": "Solid",
     "LineWidthpx": "2",
     "LineColor": "Orange",
@@ -165,34 +165,6 @@
     "LineStyle": "1",
     "LineEndIcon": "myicon.svg",
     "WaypointLatLngArray": "61.1910447 -149.8221347",
-    "Update": "1"
-  },
-  {
-    "Source": "Anchorage, United States",
-    "Target": ", ",
-    "Name": "Anchorage",
-    "Desc": "Anchorage to Tokyo Connection",
-    "LineType": "Solid",
-    "LineWidthpx": "3",
-    "LineColor": "Orange",
-    "LineAttribute": "2",
-    "LineStyle": "1",
-    "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "-33.8883996 151.1841899",
-    "Update": "1"
-  },
-  {
-    "Source": ", ",
-    "Target": "Camperdown, Australia",
-    "Name": "Tokyo",
-    "Desc": "Tokyo to Sydney Connection",
-    "LineType": "Solid",
-    "LineWidthpx": "2",
-    "LineColor": "Orange",
-    "LineAttribute": "2",
-    "LineStyle": "1",
-    "LineEndIcon": "myicon.svg",
-    "WaypointLatLngArray": "-33.8883996 151.1841899",
-    "Update": "1"
+    "Update": "0"
   }
 ]
