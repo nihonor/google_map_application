@@ -9,6 +9,14 @@ import { SiteMarker, InterConnectSegment, Address } from "@/types";
 import html2canvas from "html2canvas";
 import DataPreview from "./DataPreview";
 
+interface AddressInfo {
+  city?: string;
+  state?: string;
+  country?: string;
+  street?: string;
+  postalCode?: string;
+}
+
 interface Props {
   markers: SiteMarker[];
   interconnects: InterConnectSegment[];
@@ -745,38 +753,30 @@ export default function GoogleMap({
 
   // this is to capture the current map and save it
   const captureAllMapElements = async () => {
-    const allCurrentMarkers: SiteMarker[] = [];
-    const allCurrentInterconnects: InterConnectSegment[] = [];
-
     // Capture markers
+    const allCurrentMarkers: SiteMarker[] = [...markers]; // Start with all existing markers
+
+    // Update markers that have been dragged
     for (const [markerName, mapMarker] of markersRef.current.entries()) {
       try {
         const position = mapMarker.position;
-
         if (position) {
           const lat =
             typeof position.lat === "function" ? position.lat() : position.lat;
           const lng =
             typeof position.lng === "function" ? position.lng() : position.lng;
 
-          // Get address information for the new location
-          const addressInfo = await reverseGeocode({ lat, lng });
-
-          // Create a new name based on location
-          const newName = `${addressInfo.city}, ${addressInfo.country}`;
-
-          // Find the original marker to preserve other properties
-          const originalMarker =
-            updatedMarkers.find((m) => m.Name === markerName) ||
-            markers.find((m) => m.Name === markerName);
-
-          if (originalMarker) {
-            allCurrentMarkers.push({
-              ...originalMarker,
-              Name: newName,
+          // Find and update the existing marker
+          const index = allCurrentMarkers.findIndex(
+            (m) => m.Name === markerName
+          );
+          if (index !== -1) {
+            // Update the marker's position
+            allCurrentMarkers[index] = {
+              ...allCurrentMarkers[index],
               LatLng: `${lat}, ${lng}`,
               Update: "1",
-            });
+            };
           }
         }
       } catch (error) {
@@ -784,20 +784,10 @@ export default function GoogleMap({
       }
     }
 
-    // If no markers have been added to the map yet, use the processed markers
-    if (
-      allCurrentMarkers.length === 0 &&
-      processedMarkersRef.current.length > 0
-    ) {
-      allCurrentMarkers.push(...processedMarkersRef.current);
-    }
-
-    // If we still have no markers, fall back to the original props
-    if (allCurrentMarkers.length === 0 && markers.length > 0) {
-      allCurrentMarkers.push(...markers);
-    }
-
     // Capture interconnects separately
+    const allCurrentInterconnects: InterConnectSegment[] = [...interconnects]; // Start with all existing interconnects
+
+    // Update only the visible interconnects that have been modified
     for (const [segmentName, polyline] of polylinesRef.current.entries()) {
       try {
         const path = polyline.getPath();
@@ -813,30 +803,28 @@ export default function GoogleMap({
             )
             .join(", ");
 
-          // Find the original interconnect to preserve other properties
-          const originalInterconnect =
-            updatedInterconnects.find((ic) => ic.Name === segmentName) ||
-            interconnects.find((ic) => ic.Name === segmentName);
+          // Split the segmentName to get Source and Target
+          const [source, target] = segmentName.split("-");
 
-          if (originalInterconnect) {
-            allCurrentInterconnects.push({
-              ...originalInterconnect,
+          // Find and update the existing interconnect
+          const index = allCurrentInterconnects.findIndex(
+            (ic) => ic.Source === source && ic.Target === target
+          );
+
+          if (index !== -1) {
+            // Only update if waypoints have changed
+            const hasChanged =
+              waypointPath !==
+              allCurrentInterconnects[index].WaypointLatLngArray;
+            allCurrentInterconnects[index] = {
+              ...allCurrentInterconnects[index],
               WaypointLatLngArray: waypointPath,
-              Update: "1",
-            });
+              Update: hasChanged ? "1" : allCurrentInterconnects[index].Update,
+            };
           }
         }
       } catch (error) {
         console.error(`Error capturing interconnect ${segmentName}:`, error);
-      }
-    }
-
-    // If no interconnects in map, use the state or props
-    if (allCurrentInterconnects.length === 0) {
-      if (updatedInterconnects.length > 0) {
-        allCurrentInterconnects.push(...updatedInterconnects);
-      } else if (interconnects.length > 0) {
-        allCurrentInterconnects.push(...interconnects);
       }
     }
 

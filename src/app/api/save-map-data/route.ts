@@ -15,29 +15,17 @@ export async function POST(request: NextRequest) {
     // Paths to JSON files
     const markersFilePath = path.join(process.cwd(), 'src', 'data', 'SiteMarkers.json');
     const interconnectsFilePath = path.join(process.cwd(), 'src', 'data', 'InterConnectSegments.json');
-    
-    // Create backup of existing files
-    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const markersBackupPath = `${markersFilePath}.${timestamp}.bak`;
-    const interconnectsBackupPath = `${interconnectsFilePath}.${timestamp}.bak`;
-    
-    try {
-      await fs.copyFile(markersFilePath, markersBackupPath);
-      await fs.copyFile(interconnectsFilePath, interconnectsBackupPath);
-      console.log('Created backup files:', { markersBackupPath, interconnectsBackupPath });
-    } catch (backupError) {
-      console.warn('Failed to create backup files:', backupError);
-    }
 
     // Prepare the data for saving
+    console.log('API: Preparing data for saving...');
     const finalMarkers = markers.map((marker: any) => ({
       ...marker,
-      Update: "1"
+      Update: marker.Update || "0" // Preserve original Update value or default to "0"
     }));
 
     const finalInterconnects = interconnects.map((interconnect: any) => ({
       ...interconnect,
-      Update: "1"
+      Update: interconnect.Update || "0" // Preserve original Update value or default to "0"
     }));
 
     // Write the files
@@ -75,16 +63,6 @@ export async function POST(request: NextRequest) {
 
     } catch (writeError) {
       console.error('Error writing files:', writeError);
-      
-      // Try to restore from backup if write failed
-      try {
-        await fs.copyFile(markersBackupPath, markersFilePath);
-        await fs.copyFile(interconnectsBackupPath, interconnectsFilePath);
-        console.log('Restored from backup files after write failure');
-      } catch (restoreError) {
-        console.error('Failed to restore from backup:', restoreError);
-      }
-
       throw writeError;
     }
 

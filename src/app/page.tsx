@@ -35,10 +35,9 @@ export default function Home() {
     updatedInterconnects: InterConnectSegment[]
   ) => {
     try {
-      console.log("Saving data:", {
-        markersCount: updatedMarkers.length,
-        interconnectsCount: updatedInterconnects.length,
-      });
+      console.log("Starting save process...");
+      console.log("Markers to save:", updatedMarkers);
+      console.log("Interconnects to save:", updatedInterconnects);
 
       // Prepare data for API saving
       const dataToSave = {
@@ -57,13 +56,7 @@ export default function Home() {
         })),
       };
 
-      console.log("Data prepared for saving:", {
-        markersCount: dataToSave.markers.length,
-        interconnectsCount: dataToSave.interconnects.length,
-        sampleMarker: dataToSave.markers[0],
-        sampleInterconnect: dataToSave.interconnects[0],
-      });
-
+      console.log("Sending data to API...");
       const response = await fetch("/api/save-map-data", {
         method: "POST",
         headers: {
@@ -72,22 +65,25 @@ export default function Home() {
         body: JSON.stringify(dataToSave),
       });
 
+      console.log("API Response status:", response.status);
       const responseData = await response.json();
-      console.log("Save response:", responseData);
+      console.log("API Response data:", responseData);
 
       if (!response.ok) {
         throw new Error(responseData.message || "Failed to save data");
       }
 
       // Update local state with the complete data returned from the API
+      console.log("Updating local state with new data...");
       setMarkers(responseData.markers);
       setInterconnects(responseData.interconnects);
-      console.log("Local state updated with new data");
+      console.log("Local state updated successfully");
 
       // Force reload the page to get fresh data
+      console.log("Reloading page to get fresh data...");
       window.location.reload();
     } catch (error) {
-      console.error("Error saving data:", error);
+      console.error("Error in save process:", error);
       alert("Failed to save data. Please try again.");
     }
   };
