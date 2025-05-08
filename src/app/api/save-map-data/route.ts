@@ -16,16 +16,47 @@ export async function POST(request: NextRequest) {
     const markersFilePath = path.join(process.cwd(), 'src', 'data', 'SiteMarkers.json');
     const interconnectsFilePath = path.join(process.cwd(), 'src', 'data', 'InterConnectSegments.json');
 
+    // Load previous markers to detect renames
+    let previousMarkers = [];
+    try {
+      previousMarkers = JSON.parse(await fs.readFile(markersFilePath, 'utf8'));
+    } catch (e) {
+      // If file doesn't exist or can't be read, treat as empty
+      previousMarkers = [];
+    }
+
+    // Build a map of oldName -> newName for renamed markers
+    const oldToNewNameMap = new Map();
+    previousMarkers.forEach((oldMarker:any) => {
+      // Try to find a marker with the same LatLng (or other unique property)
+      const newMarker = markers.find((m:any) => m.LatLng === oldMarker.LatLng && m.Name !== oldMarker.Name);
+      if (newMarker) {
+        oldToNewNameMap.set(oldMarker.Name, newMarker.Name);
+      }
+    });
+
+    // Update all interconnectors' Source and Target fields if the marker was renamed
+    const updatedInterconnects = interconnects.map((ic:any) => {
+      let newSource = ic.Source;
+      let newTarget = ic.Target;
+      if (oldToNewNameMap.has(ic.Source)) {
+        newSource = oldToNewNameMap.get(ic.Source);
+      }
+      if (oldToNewNameMap.has(ic.Target)) {
+        newTarget = oldToNewNameMap.get(ic.Target);
+      }
+      return {
+        ...ic,
+        Source: newSource,
+        Target: newTarget,
+        Update: "1"
+      };
+    });
+
     // Prepare the data for saving
-    console.log('API: Preparing data for saving...');
-    const finalMarkers = markers.map((marker: any) => ({
+    const finalMarkers = markers.map((marker:any) => ({
       ...marker,
       Update: "1" // Always set Update to "1" for saved markers
-    }));
-
-    const finalInterconnects = interconnects.map((interconnect: any) => ({
-      ...interconnect,
-      Update: "1" // Always set Update to "1" for saved interconnects
     }));
 
     // Write the files
@@ -40,7 +71,7 @@ export async function POST(request: NextRequest) {
       // Write interconnects
       await fs.writeFile(
         interconnectsFilePath,
-        JSON.stringify(finalInterconnects, null, 2),
+        JSON.stringify(updatedInterconnects, null, 2),
         { encoding: 'utf8', flag: 'w' }
       );
 
@@ -49,7 +80,7 @@ export async function POST(request: NextRequest) {
       const verifyInterconnects = JSON.parse(await fs.readFile(interconnectsFilePath, 'utf8'));
 
       if (verifyMarkers.length !== finalMarkers.length || 
-          verifyInterconnects.length !== finalInterconnects.length) {
+          verifyInterconnects.length !== updatedInterconnects.length) {
         throw new Error('Verification failed: File content mismatch after save');
       }
 
@@ -58,7 +89,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         message: 'Data saved successfully',
         markers: finalMarkers,
-        interconnects: finalInterconnects
+        interconnects: updatedInterconnects
       }, { status: 200 });
 
     } catch (writeError) {
