@@ -39,6 +39,10 @@ export default function Home() {
       console.log("Markers to save:", updatedMarkers);
       console.log("Interconnects to save:", updatedInterconnects);
 
+      // Update local state first
+      setMarkers(updatedMarkers);
+      setInterconnects(updatedInterconnects);
+
       // Prepare data for API saving
       const dataToSave = {
         markers: updatedMarkers.map((marker) => ({
@@ -47,12 +51,12 @@ export default function Home() {
             typeof marker.Address === "string"
               ? marker.Address
               : JSON.stringify(marker.Address),
-          Update: marker.Update || "1", // Ensure Update field is set
+          Update: "1", // Always set Update to "1" for saved markers
         })),
         interconnects: updatedInterconnects.map((segment) => ({
           ...segment,
           WaypointLatLngArray: segment.WaypointLatLngArray,
-          Update: segment.Update || "1", // Ensure Update field is set
+          Update: "1", // Always set Update to "1" for saved interconnects
         })),
       };
 
@@ -73,11 +77,11 @@ export default function Home() {
         throw new Error(responseData.message || "Failed to save data");
       }
 
-      // Update local state with the complete data returned from the API
-      console.log("Updating local state with new data...");
-      setMarkers(responseData.markers);
-      setInterconnects(responseData.interconnects);
-      console.log("Local state updated successfully");
+      // Show success message
+      alert("Changes saved successfully!");
+
+      // Wait for state to update before reloading
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // Force reload the page to get fresh data
       console.log("Reloading page to get fresh data...");

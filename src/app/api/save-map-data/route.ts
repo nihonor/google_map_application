@@ -20,12 +20,12 @@ export async function POST(request: NextRequest) {
     console.log('API: Preparing data for saving...');
     const finalMarkers = markers.map((marker: any) => ({
       ...marker,
-      Update: marker.Update || "0" // Preserve original Update value or default to "0"
+      Update: "1" // Always set Update to "1" for saved markers
     }));
 
     const finalInterconnects = interconnects.map((interconnect: any) => ({
       ...interconnect,
-      Update: interconnect.Update || "0" // Preserve original Update value or default to "0"
+      Update: "1" // Always set Update to "1" for saved interconnects
     }));
 
     // Write the files
