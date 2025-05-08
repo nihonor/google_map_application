@@ -39,10 +39,6 @@ export default function Home() {
       console.log("Markers to save:", updatedMarkers);
       console.log("Interconnects to save:", updatedInterconnects);
 
-      // Update local state first
-      setMarkers(updatedMarkers);
-      setInterconnects(updatedInterconnects);
-
       // Prepare data for API saving
       const dataToSave = {
         markers: updatedMarkers.map((marker) => ({
@@ -77,15 +73,12 @@ export default function Home() {
         throw new Error(responseData.message || "Failed to save data");
       }
 
-      // Show success message
+      // Update local state with the complete data returned from the API
+      setMarkers(responseData.markers);
+      setInterconnects(responseData.interconnects);
       alert("Changes saved successfully!");
-
-      // Wait for state to update before reloading
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Force reload the page to get fresh data
-      console.log("Reloading page to get fresh data...");
-      window.location.reload();
+      // Do NOT reload the page!
+      // window.location.reload();
     } catch (error) {
       console.error("Error in save process:", error);
       alert("Failed to save data. Please try again.");
