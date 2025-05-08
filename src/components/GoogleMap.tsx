@@ -484,78 +484,26 @@ export default function GoogleMap({
                       event.latLng
                     );
 
-                    // Update the marker reference with new name and tooltip
-                    const currentMarker = markersRef.current.get(marker.Name);
-                    if (currentMarker) {
-                      // Remove all existing listeners from the marker
-                      google.maps.event.clearInstanceListeners(currentMarker);
-
-                      // Update the marker's title
-                      currentMarker.title = newName;
-
-                      // Add new event listeners
-                      currentMarker.addListener("mouseout", () => {
-                        infoWindowRef.current?.close();
-                      });
-
-                      currentMarker.addListener("mouseover", async () => {
-                        const position = currentMarker.position;
-                        if (!position) return;
-
-                        const lat =
-                          typeof position.lat === "function"
-                            ? position.lat()
-                            : position.lat;
-                        const lng =
-                          typeof position.lng === "function"
-                            ? position.lng()
-                            : position.lng;
-
-                        // Get fresh address information for current position
-                        const addressInfo = await reverseGeocode({ lat, lng });
-
-                        // Create location string with only available components
-                        const locationParts = [];
-                        if (addressInfo.street)
-                          locationParts.push(addressInfo.street);
-                        if (addressInfo.city)
-                          locationParts.push(addressInfo.city);
-                        if (addressInfo.state)
-                          locationParts.push(addressInfo.state);
-                        if (addressInfo.country)
-                          locationParts.push(addressInfo.country);
-
-                        const locationString = locationParts.join(", ");
-
-                        const content = `
-                          <div style="font-family: Arial, sans-serif;">
-                            <strong>${locationString}</strong><br>
-                            ${newTooltip.replace(/\\n/g, "<br>")}
-                            <br>
-                            <span style="color: #666;">Coordinates: ${lat.toFixed(
-                              6
-                            )}, ${lng.toFixed(6)}</span>
-                          </div>
-                        `;
-                        infoWindowRef.current?.setContent(content);
-                        infoWindowRef.current?.open(map, currentMarker);
-                      });
-
-                      currentMarker.addListener("click", () => {
-                        const content = `
-                          <div style="font-family: Arial, sans-serif;">
-                            <strong>${newName}</strong><br>
-                            ${newDetails.replace(/\\n/g, "<br>")}
-                          </div>
-                        `;
-                        infoWindowRef.current?.setContent(content);
-                        infoWindowRef.current?.open(map, currentMarker);
-                      });
-
-                      // Update marker reference in the map
+                    // Remove the old marker from the map and from markersRef
+                    const oldMarker = markersRef.current.get(marker.Name);
+                    if (oldMarker) {
+                      oldMarker.map = null;
                       markersRef.current.delete(marker.Name);
-                      markersRef.current.set(newName, currentMarker);
                     }
+
+                    // Create the new marker (with newName and new position)
+                    const mapMarker =
+                      new google.maps.marker.AdvancedMarkerElement({
+                        position: { lat: newLat, lng: newLng },
+                        map,
+                        title: newName,
+                        gmpDraggable: editMode,
+                        gmpClickable: true,
+                        // ...other options as needed
+                      });
+
+                    // Add the new marker to markersRef
+                    markersRef.current.set(newName, mapMarker);
                   } else {
                     // If newName is not valid, just update the position and details, keep the old name
                     setUpdatedMarkers((prevMarkers) =>
@@ -640,6 +588,47 @@ export default function GoogleMap({
       const sourceMarker = markersRef.current.get(segment.Source);
       const targetMarker = markersRef.current.get(segment.Target);
       if (!sourceMarker || !targetMarker) {
+        const google = window.google;
+        if (!sourceMarker && segment.WaypointLatLngArray) {
+          const [firstCoord, lastCoord] =
+            segment.WaypointLatLngArray.split(" → ");
+          if (firstCoord) {
+            const [lat, lng] = firstCoord.split(/[, ]+/).map(Number);
+            if (!isNaN(lat) && !isNaN(lng)) {
+              new google.maps.Marker({
+                position: { lat, lng },
+                map,
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 6,
+                  fillColor: "#ff0000",
+                  fillOpacity: 1,
+                  strokeWeight: 2,
+                  strokeColor: "#fff",
+                },
+                title: "Missing endpoint for interconnector",
+              });
+            }
+          }
+          if (lastCoord) {
+            const [lat, lng] = lastCoord.split(/[, ]+/).map(Number);
+            if (!isNaN(lat) && !isNaN(lng)) {
+              new google.maps.Marker({
+                position: { lat, lng },
+                map,
+                icon: {
+                  path: google.maps.SymbolPath.CIRCLE,
+                  scale: 6,
+                  fillColor: "#ff0000",
+                  fillOpacity: 1,
+                  strokeWeight: 2,
+                  strokeColor: "#fff",
+                },
+                title: "Missing endpoint for interconnector",
+              });
+            }
+          }
+        }
         return;
       }
 
